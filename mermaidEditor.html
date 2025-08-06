@@ -2217,9 +2217,11 @@
         }
 
         function createMarkdownBox(options = {}) {
+            console.log('createMarkdownBox options:', options);
             const id = options.id || generateId();
             const markdownText = options.text || '## Markdown\n\n- Write something\n- **Bold** or *italic*';
             const html = marked.parse(markdownText);
+            console.log('createMarkdownBox html:', html);
 
             const data = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="300" height="200">
