@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
@@ -635,7 +636,7 @@
         }
         
         .layers-panel.visible {
-            display: block;
+            display: flex;
         }
         
         .layer-item {
@@ -733,6 +734,16 @@
             background: rgba(79, 70, 229, 0.15);
             border-color: #3730a3;
             transform: translateY(-1px);
+        }
+
+        #markdown-editor {
+            min-width: 200px;
+            min-height: 100px;
+        }
+
+        #markdown-textarea {
+            outline: none;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -955,6 +966,14 @@
                 </button>
             </div>
             
+            <!-- Markdown tool (always visible) -->
+            <div id="markdown-tool" class="tool-group flex flex-col items-center gap-1">
+                <div class="border-t w-6 my-0.5"></div>
+                <button data-mode="add-markdown" class="tool-btn p-1.5 rounded-md w-8 h-8 flex items-center justify-center" title="Add Markdown Box">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.5 4H3.5A1.5 1.5 0 0 0 2 5.5v13A1.5 1.5 0 0 0 3.5 20h17a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 20.5 4zM7 16H5V8h2v8zm5 0h-2V8h2v8zm5 0h-2V8h2v8z"></path></svg>
+                </button>
+            </div>
+            
             <!-- Sequence diagram tools -->
             <div id="sequence-tools" class="tool-group hidden flex-col items-center gap-1" style="display: none;">
                 <div class="border-t w-6 my-0.5"></div>
@@ -1083,6 +1102,7 @@
                                 <label for="font-family" class="block text-sm font-medium text-gray-700">Font Family</label>
                                 <select id="font-family" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-1">
                                     <option>Kalam</option>
+                                    <option>Comic Sans MS</option>
                                     <option>Inter</option>
                                     <option>Arial</option>
                                     <option>Helvetica</option>
@@ -1686,7 +1706,7 @@
                 case 'actor': shape = new fabric.Rect({ ...commonProps, width: 120, height: 40, rx: 5, ry: 5, fill: '#e3f2fd' }); break;
             }
 
-            // Apply sketchy effect
+            // Apply sketchy effect to all shapes
             makeSketchy(shape, 1.5);
 
             const group = new fabric.Group([shape, textObj], {
@@ -2184,6 +2204,36 @@
             return group;
         }
 
+        function createMarkdownBox(options = {}) {
+            const id = options.id || generateId();
+            const foreignObject = new fabric.Rect({
+                width: 300,
+                height: 200,
+                fill: 'white',
+                stroke: '#ccc',
+                strokeWidth: 1
+            });
+
+            const text = new fabric.IText('## Markdown\n\n- Write something\n- **Bold** or *italic*', {
+                left: 10,
+                top: 10,
+                fontSize: 14,
+                width: 280,
+                height: 180,
+                editingBorderColor: 'blue',
+            });
+            
+            const group = new fabric.Group([foreignObject, text], {
+                left: options.left || 200,
+                top: options.top || 200,
+                isMarkdown: true,
+                id: id
+            });
+            
+            canvas.add(group);
+            return group;
+        }
+
         // --- Inspector Logic ---
         function updatePropertiesPanel(obj) {
             [shapePropertiesDiv, textPropertiesDiv, connectorPropertiesDiv, subgraphPropertiesDiv].forEach(div => div && div.classList.add('hidden'));
@@ -2401,12 +2451,15 @@
                 mobileToggle.addEventListener('click', () => {
                     rightPanel.classList.toggle('mobile-open');
                     
-                    // Update toggle icon
-                    const icon = mobileToggle.querySelector('svg path');
                     if (rightPanel.classList.contains('mobile-open')) {
-                        icon.setAttribute('d', 'M6 18L18 6M6 6l12 12'); // Close icon
+                        mobileToggle.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
                     } else {
-                        icon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Menu icon
+                        mobileToggle.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>`;
+                    }
+                    if (rightPanel.classList.contains('mobile-open')) {
+                        mobileToggle.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+                    } else {
+                        mobileToggle.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>`;
                     }
                 });
                 
@@ -2687,6 +2740,10 @@
                         }
                         setMode('select');
 
+                    } else if (currentMode === 'add-markdown' && options.target == null) {
+                        const pointer = canvas.getPointer(options.e);
+                        createMarkdownBox({ left: pointer.x, top: pointer.y });
+                        setMode('select');
                     } else if (currentMode === 'connector' && lineStartShape) {
                         if (activeLine) canvas.remove(activeLine);
                         activeLine = null;
@@ -3105,6 +3162,71 @@
             canvas.on('object:modified', debouncedGenerate);
             canvas.on('object:added', debouncedGenerate);
             canvas.on('object:removed', debouncedGenerate);
+
+            const markdownEditor = document.getElementById('markdown-editor');
+            const markdownTextarea = document.getElementById('markdown-textarea');
+            const markdownToolbar = document.getElementById('markdown-toolbar');
+            let currentMarkdownObject = null;
+
+            canvas.on('mouse:dblclick', (options) => {
+                if (options.target && options.target.isMarkdown) {
+                    currentMarkdownObject = options.target;
+                    const textObject = currentMarkdownObject.getObjects()[1];
+                    markdownTextarea.innerHTML = textObject.text;
+                    markdownEditor.classList.remove('hidden');
+                    positionMarkdownEditor();
+                }
+            });
+
+            markdownToolbar.addEventListener('click', (e) => {
+                const command = e.target.closest('button').dataset.command;
+                if (command === 'toggle-view') {
+                    // Toggle between raw markdown and WYSIWYG
+                    const isRaw = markdownTextarea.dataset.view === 'raw';
+                    if (isRaw) {
+                        const html = marked.parse(markdownTextarea.innerText);
+                        markdownTextarea.innerHTML = html;
+                        markdownTextarea.dataset.view = 'wysiwyg';
+                    } else {
+                        markdownTextarea.innerText = markdownTextarea.innerHTML;
+                        markdownTextarea.dataset.view = 'raw';
+                    }
+                } else if (command === 'createLink') {
+                    const url = prompt('Enter a URL:');
+                    if (url) {
+                        document.execCommand(command, false, url);
+                    }
+                } else {
+                    document.execCommand(command, false, null);
+                }
+            });
+
+            markdownTextarea.addEventListener('input', () => {
+                if (currentMarkdownObject) {
+                    const textObject = currentMarkdownObject.getObjects()[1];
+                    textObject.text = markdownTextarea.innerHTML;
+                    canvas.renderAll();
+                }
+            });
+
+            function positionMarkdownEditor() {
+                if (!currentMarkdownObject) return;
+                const- { left, top, width, height } = currentMarkdownObject.getBoundingRect();
+                markdownEditor.style.left = `${left}px`;
+                markdownEditor.style.top = `${top}px`;
+                markdownEditor.style.width = `${width}px`;
+                markdownEditor.style.height = `${height}px`;
+            }
+
+            canvas.on('object:moving', positionMarkdownEditor);
+            canvas.on('object:scaling', positionMarkdownEditor);
+
+            document.addEventListener('click', (e) => {
+                if (!markdownEditor.contains(e.target) && !canvas.getActiveObject()) {
+                    markdownEditor.classList.add('hidden');
+                    currentMarkdownObject = null;
+                }
+            });
         }
 
         function handleSelection(target) {
@@ -3619,10 +3741,22 @@
             // Detect diagram type
             const firstLine = lines.find(line => line && !line.startsWith('%%'));
             if (firstLine && firstLine.includes('sequenceDiagram')) {
+                diagramType = 'sequenceDiagram';
                 return parseSequenceDiagram(lines);
             } else if (firstLine && firstLine.includes('classDiagram')) {
+                diagramType = 'classDiagram';
                 return parseClassDiagram(lines);
+            } else if (firstLine && firstLine.includes('erDiagram')) {
+                diagramType = 'erDiagram';
+                return parseERDiagram(lines);
+            } else if (firstLine && firstLine.includes('gantt')) {
+                diagramType = 'gantt';
+                return parseGanttDiagram(lines);
+            } else if (firstLine && firstLine.includes('journey')) {
+                diagramType = 'journey';
+                return parseJourneyDiagram(lines);
             } else {
+                diagramType = 'flowchart';
                 return parseFlowchart(lines);
             }
         }
@@ -3787,6 +3921,120 @@
             
             return { type: 'class', classes, relationships };
         }
+
+        function parseERDiagram(lines) {
+            const entities = [];
+            const relationships = [];
+            let currentEntity = null;
+
+            for (const line of lines) {
+                if (!line || line.startsWith('%%') || line.includes('erDiagram')) continue;
+
+                // Entity definition start
+                const entityStartMatch = line.match(/^\s*([a-zA-Z0-9_]+)\s*\{/);
+                if (entityStartMatch) {
+                    currentEntity = { name: entityStartMatch[1], attributes: [] };
+                    continue;
+                }
+
+                // Entity definition end
+                if (line.match(/^\s*\}\s*$/)) {
+                    if (currentEntity) {
+                        entities.push(currentEntity);
+                        currentEntity = null;
+                    }
+                    continue;
+                }
+
+                // Attributes inside entity
+                if (currentEntity) {
+                    const attrMatch = line.match(/^\s*([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_]+)(?:\s+"(.*)")?/);
+                    if (attrMatch) {
+                        currentEntity.attributes.push({
+                            type: attrMatch[1],
+                            name: attrMatch[2],
+                            comment: attrMatch[3] || ''
+                        });
+                    }
+                    continue;
+                }
+
+                // Relationships
+                const relMatch = line.match(/^\s*([a-zA-Z0-9_]+)\s*(\|o--|\|o-|o--|--|--\|\||--o\|)\s*([a-zA-Z0-9_]+)\s*:\s*(.*)$/);
+                if (relMatch) {
+                    relationships.push({
+                        from: relMatch[1],
+                        type: relMatch[2],
+                        to: relMatch[3],
+                        label: relMatch[4]
+                    });
+                }
+            }
+            return { type: 'er', entities, relationships };
+        }
+
+        function parseGanttDiagram(lines) {
+            const tasks = [];
+            const milestones = [];
+            let currentSection = 'Default Section';
+
+            for (const line of lines) {
+                if (!line || line.startsWith('%%') || line.includes('gantt')) continue;
+
+                // Section
+                const sectionMatch = line.match(/^\s*section\s+(.*)/);
+                if (sectionMatch) {
+                    currentSection = sectionMatch[1];
+                    continue;
+                }
+
+                // Task or Milestone
+                const taskMatch = line.match(/^\s*(.*?)\s*:\s*(?:(milestone),\s*)?(?:(.*?),\s*)?(\d{4}-\d{2}-\d{2})?,?\s*(.*)?/);
+                if (taskMatch) {
+                    const name = taskMatch[1];
+                    const isMilestone = taskMatch[2] === 'milestone';
+                    const id = taskMatch[3];
+                    const start = taskMatch[4];
+                    const duration = taskMatch[5];
+
+                    if (isMilestone) {
+                        milestones.push({ name, date: start, section: currentSection });
+                    } else {
+                        tasks.push({ name, id, start, duration, section: currentSection });
+                    }
+                }
+            }
+            return { type: 'gantt', tasks, milestones };
+        }
+
+        function parseJourneyDiagram(lines) {
+            const sections = [];
+            let currentSection = null;
+
+            for (const line of lines) {
+                if (!line || line.startsWith('%%') || line.includes('journey')) continue;
+
+                // Section
+                const sectionMatch = line.match(/^\s*section\s+(.*)/);
+                if (sectionMatch) {
+                    if (currentSection) sections.push(currentSection);
+                    currentSection = { name: sectionMatch[1], steps: [] };
+                    continue;
+                }
+
+                // Step
+                const stepMatch = line.match(/^\s*(.*?)\s*:\s*(\d)\s*:\s*(.*)/);
+                if (stepMatch && currentSection) {
+                    currentSection.steps.push({
+                        name: stepMatch[1],
+                        score: parseInt(stepMatch[2], 10),
+                        actors: stepMatch[3].split(',').map(s => s.trim())
+                    });
+                }
+            }
+            if (currentSection) sections.push(currentSection);
+            return { type: 'journey', sections };
+        }
         
         function parseFlowchart(lines) {
             const nodes = [];
@@ -3943,18 +4191,27 @@
             messages = [];
             classes = [];
             relationships = [];
+            entities = [];
+            erRelationships = [];
+            tasks = [];
+            milestones = [];
+            journeySteps = [];
+            journeySections = [];
         
             const parseResult = parseMermaidCode(code);
             
             // Update diagram type and toolbar based on loaded content
             if (parseResult.type === 'sequence') {
-                diagramType = 'sequenceDiagram';
                 loadSequenceDiagram(parseResult);
             } else if (parseResult.type === 'class') {
-                diagramType = 'classDiagram';
                 loadClassDiagram(parseResult);
+            } else if (parseResult.type === 'er') {
+                loadERDiagram(parseResult);
+            } else if (parseResult.type === 'gantt') {
+                loadGanttDiagram(parseResult);
+            } else if (parseResult.type === 'journey') {
+                loadJourneyDiagram(parseResult);
             } else {
-                diagramType = 'flowchart';
                 loadFlowchart(parseResult);
             }
             
@@ -4006,6 +4263,70 @@
                 }
             });
             
+            canvas.renderAll();
+            generateAndRenderMermaid();
+        }
+
+        function loadERDiagram({ entities, relationships }) {
+            const createdEntities = {};
+            const entitySpacing = 250;
+            const entitiesPerRow = 3;
+            let startX = 200;
+            let startY = 200;
+
+            entities.forEach((entityData, index) => {
+                const row = Math.floor(index / entitiesPerRow);
+                const col = index % entitiesPerRow;
+
+                const entityObj = createEntity({
+                    name: entityData.name,
+                    attributes: entityData.attributes.map(a => `${a.type} ${a.name}`).join('\n'),
+                    left: startX + (col * entitySpacing),
+                    top: startY + (row * 200)
+                });
+                createdEntities[entityData.name] = entityObj;
+            });
+
+            relationships.forEach(rel => {
+                const fromEntity = createdEntities[rel.from];
+                const toEntity = createdEntities[rel.to];
+                if (fromEntity && toEntity) {
+                    const newConn = { from: fromEntity.id, to: toEntity.id, type: rel.type, text: rel.label, line: null };
+                    connections.push(newConn);
+                    redrawConnector(newConn);
+                }
+            });
+            canvas.renderAll();
+            generateAndRenderMermaid();
+        }
+
+        function loadGanttDiagram({ tasks, milestones }) {
+            let yPos = 100;
+            tasks.forEach(task => {
+                createTask({ name: task.name, left: 200, top: yPos, duration: task.duration });
+                yPos += 60;
+            });
+            milestones.forEach(milestone => {
+                createMilestone({ name: milestone.name, left: 200, top: yPos, date: milestone.date });
+                yPos += 60;
+            });
+            canvas.renderAll();
+            generateAndRenderMermaid();
+        }
+
+        function loadJourneyDiagram({ sections }) {
+            let yPos = 100;
+            let xPos = 150;
+            sections.forEach(section => {
+                createJourneySection({ name: section.name, left: xPos, top: yPos });
+                yPos += 80;
+                section.steps.forEach(step => {
+                    createJourneyStep({ name: step.name, score: step.score, actors: step.actors, left: xPos, top: yPos });
+                    yPos += 120;
+                });
+                xPos += 350;
+                yPos = 100;
+            });
             canvas.renderAll();
             generateAndRenderMermaid();
         }
@@ -4181,7 +4502,7 @@
                 diagramType: diagramType,
                 flowchartDirection: flowchartDirection,
                 canvas: {
-                    objects: canvas.toJSON(['id', 'shapeType', 'isShapeGroup', 'isText', 'isSubgraph', 'isActor', 'isClass', 'isNote', 'isMessage', 'isRelationship', 'isConnector', 'className', 'stereotype', 'attributes', 'methods', 'messageData', 'relationshipData', 'connection', 'subgraphWidth', 'subgraphHeight']),
+                    objects: canvas.toJSON(['id', 'shapeType', 'isShapeGroup', 'isText', 'isSubgraph', 'isActor', 'isClass', 'isNote', 'isMessage', 'isRelationship', 'isConnector', 'className', 'stereotype', 'attributes', 'methods', 'messageData', 'relationshipData', 'connection', 'subgraphWidth', 'subgraphHeight', 'isMarkdown']),
                     zoom: canvas.getZoom(),
                     viewportTransform: canvas.viewportTransform
                 },
@@ -4251,7 +4572,13 @@
                 messages = [];
                 classes = [];
                 relationships = [];
-                
+                entities = [];
+                erRelationships = [];
+                tasks = [];
+                milestones = [];
+                journeySteps = [];
+                journeySections = [];
+
                 // Restore global state
                 diagramType = projectData.diagramType || 'flowchart';
                 flowchartDirection = projectData.flowchartDirection || 'TD';
@@ -4300,6 +4627,10 @@
                     
                     if (projectData.relationships) {
                         relationships = projectData.relationships;
+                    }
+
+                    if (projectData.layersData) {
+                        loadLayersData(projectData.layersData);
                     }
                     
                     canvas.renderAll();
@@ -4796,7 +5127,7 @@
             setupMobilePanelToggle();
             setMode('select');
             makeDraggable(document.getElementById('tool-palette'));
-            makeDraggable(document.getElementById('grid-toolbar'));
+            makeDraggable(document.getElementById('layers-panel'));
             resizeCanvas();
             
             // Enable grid and snap by default
@@ -5142,7 +5473,6 @@
             const layersBtn = document.getElementById('layers-btn');
             if (layersBtn) {
                 layersBtn.addEventListener('click', () => {
-                    console.log('Layers button clicked'); // Debug log
                     layersPanel.classList.toggle('visible');
                 });
             } else {
@@ -5208,6 +5538,17 @@
         // Make the layers panel draggable
         makeDraggable(layersPanel);
     </script>
-
+    <div id="markdown-editor" class="hidden absolute bg-white border border-gray-300 rounded-lg shadow-lg p-2" style="z-index: 100;">
+        <div id="markdown-toolbar" class="flex items-center border-b pb-1 mb-1">
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="bold" title="Bold"><b>B</b></button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="italic" title="Italic"><i>I</i></button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="underline" title="Underline"><u>U</u></button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="insertUnorderedList" title="Bullet List">&bull;</button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="insertOrderedList" title="Numbered List">1.</button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="createLink" title="Link">&infin;</button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="toggle-view" title="Toggle View">M&darr;</button>
+        </div>
+        <div id="markdown-textarea" class="w-full h-full" contenteditable="true"></div>
+    </div>
 </body>
 </html>
