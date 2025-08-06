@@ -1166,6 +1166,18 @@
                 </div>
             </div>
         </div>
+    <div id="markdown-editor" class="hidden absolute bg-white border border-gray-300 rounded-lg shadow-lg p-2" style="z-index: 100;">
+        <div id="markdown-toolbar" class="flex items-center border-b pb-1 mb-1">
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="bold" title="Bold"><b>B</b></button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="italic" title="Italic"><i>I</i></button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="underline" title="Underline"><u>U</u></button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="insertUnorderedList" title="Bullet List">&bull;</button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="insertOrderedList" title="Numbered List">1.</button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="createLink" title="Link">&infin;</button>
+            <button class="p-1 hover:bg-gray-200 rounded" data-command="toggle-view" title="Toggle View">M&darr;</button>
+        </div>
+        <div id="markdown-textarea" class="w-full h-full" contenteditable="true"></div>
+    </div>
     </main>
 
     <div id="text-modal" class="modal-overlay hidden">
@@ -2709,6 +2721,10 @@
                     if (isPanning) {
                         isPanning = false;
                         canvas.setCursor('grab');
+                    } else if (currentMode === 'add-markdown' && options.target == null) {
+                        const pointer = canvas.getPointer(options.e);
+                        createMarkdownBox({ left: pointer.x, top: pointer.y });
+                        setMode('select');
                     } else if (currentMode.startsWith('add-') && options.target == null) {
                         const type = currentMode.split('-')[1];
                         const pointer = canvas.getPointer(options.e);
@@ -2740,10 +2756,6 @@
                         }
                         setMode('select');
 
-                    } else if (currentMode === 'add-markdown' && options.target == null) {
-                        const pointer = canvas.getPointer(options.e);
-                        createMarkdownBox({ left: pointer.x, top: pointer.y });
-                        setMode('select');
                     } else if (currentMode === 'connector' && lineStartShape) {
                         if (activeLine) canvas.remove(activeLine);
                         activeLine = null;
@@ -5538,17 +5550,5 @@
         // Make the layers panel draggable
         makeDraggable(layersPanel);
     </script>
-    <div id="markdown-editor" class="hidden absolute bg-white border border-gray-300 rounded-lg shadow-lg p-2" style="z-index: 100;">
-        <div id="markdown-toolbar" class="flex items-center border-b pb-1 mb-1">
-            <button class="p-1 hover:bg-gray-200 rounded" data-command="bold" title="Bold"><b>B</b></button>
-            <button class="p-1 hover:bg-gray-200 rounded" data-command="italic" title="Italic"><i>I</i></button>
-            <button class="p-1 hover:bg-gray-200 rounded" data-command="underline" title="Underline"><u>U</u></button>
-            <button class="p-1 hover:bg-gray-200 rounded" data-command="insertUnorderedList" title="Bullet List">&bull;</button>
-            <button class="p-1 hover:bg-gray-200 rounded" data-command="insertOrderedList" title="Numbered List">1.</button>
-            <button class="p-1 hover:bg-gray-200 rounded" data-command="createLink" title="Link">&infin;</button>
-            <button class="p-1 hover:bg-gray-200 rounded" data-command="toggle-view" title="Toggle View">M&darr;</button>
-        </div>
-        <div id="markdown-textarea" class="w-full h-full" contenteditable="true"></div>
-    </div>
 </body>
 </html>
