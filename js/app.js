@@ -33,13 +33,13 @@ import {
 
 // --- Mermaid Initialization ---
         mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: {
-            primaryColor: '#f3f4f6',
+            primaryColor: '#f3f4f6', 
             primaryTextColor: '#1f2937',
             primaryBorderColor: '#6366f1',
             lineColor: '#4b5563',
             textColor: '#1f2937',
         }});
-
+        
         // --- Canvas Setup ---
         const canvas = new fabric.Canvas('canvas', {
             width: canvasWrapper.clientWidth,
@@ -51,16 +51,16 @@ import {
 import * as state from './modules/state.js';
 
         // --- State Management ---
-
+        
         // --- Layers Management ---
-
+        
         // --- Utility Functions ---
         function generateId() {
             return 'N' + Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
         }
-
+        
         // --- Clipboard and Object Manipulation Functions ---
-
+        
         function deleteObject(obj) {
             if (obj.isConnector) {
                 state.setConnections(state.connections.filter(c => c !== obj.connection));
@@ -73,7 +73,7 @@ import * as state from './modules/state.js';
                     }
                     return true;
                 }));
-
+                
                 // Remove from specific arrays based on object type
                 if (obj.isActor) {
                     state.setActors(state.actors.filter(a => a.id !== obj.id));
@@ -83,16 +83,16 @@ import * as state from './modules/state.js';
                     state.setMessages(state.messages.filter(m => m.from !== obj.id && m.to !== obj.id));
                 }
             }
-
+            
             canvas.remove(obj);
             canvas.discardActiveObject().renderAll();
             generateAndRenderMermaid();
         }
-
+        
         function copyObject() {
             const activeObj = canvas.getActiveObject();
             if (!activeObj) return;
-
+            
             // Clone the object data
             state.setClipboard({
                 type: activeObj.type,
@@ -109,23 +109,23 @@ import * as state from './modules/state.js';
                 attributes: activeObj.attributes,
                 methods: activeObj.methods
             });
-
+            
             showNotification('Object copied to clipboard', 'info');
         }
-
+        
         function pasteObject() {
             if (!state.clipboard) {
                 showNotification('Nothing to paste', 'info');
                 return;
             }
-
+            
             // Create new object from clipboard data
             const pasteData = { ...state.clipboard.data };
             pasteData.left += 20; // Offset to avoid overlap
             pasteData.top += 20;
-
+            
             let newObj;
-
+            
             if (state.clipboard.isShapeGroup) {
                 newObj = addShape(state.clipboard.shapeType, {
                     id: generateId(),
@@ -133,7 +133,7 @@ import * as state from './modules/state.js';
                     top: pasteData.top,
                     text: state.clipboard.data.objects?.[1]?.text || 'Copy'
                 });
-
+                
                 // Apply stored properties
                 const shape = newObj.getObjects()[0];
                 const text = newObj.getObjects()[1];
@@ -152,7 +152,7 @@ import * as state from './modules/state.js';
                         fontWeight: state.clipboard.data.objects[1].fontWeight
                     });
                 }
-
+                
             } else if (state.clipboard.isText) {
                 newObj = createText({
                     text: state.clipboard.data.text || 'Copy',
@@ -165,7 +165,7 @@ import * as state from './modules/state.js';
                     fontFamily: state.clipboard.data.fontFamily,
                     fontWeight: state.clipboard.data.fontWeight
                 });
-
+                
             } else if (state.clipboard.isSubgraph) {
                 newObj = createSubgraph({
                     title: state.clipboard.data.objects?.[1]?.text || 'Copy',
@@ -174,14 +174,14 @@ import * as state from './modules/state.js';
                     width: state.clipboard.data.objects?.[0]?.width || 400,
                     height: state.clipboard.data.objects?.[0]?.height || 300
                 });
-
+                
             } else if (state.clipboard.isActor) {
                 newObj = createActor({
                     text: state.clipboard.data.objects?.[2]?.text || 'Copy',
                     left: pasteData.left,
                     top: pasteData.top
                 });
-
+                
             } else if (state.clipboard.isClass) {
                 newObj = createClass({
                     name: state.clipboard.className || 'Copy',
@@ -191,7 +191,7 @@ import * as state from './modules/state.js';
                     left: pasteData.left,
                     top: pasteData.top
                 });
-
+                
             } else if (state.clipboard.isNote) {
                 newObj = createNote({
                     text: state.clipboard.data.objects?.[1]?.text || 'Copy',
@@ -199,7 +199,7 @@ import * as state from './modules/state.js';
                     top: pasteData.top
                 });
             }
-
+            
             if (newObj) {
                 canvas.setActiveObject(newObj);
                 canvas.renderAll();
@@ -207,12 +207,12 @@ import * as state from './modules/state.js';
                 showNotification('Object pasted', 'success');
             }
         }
-
+        
         function duplicateObject() {
             copyObject();
             pasteObject();
         }
-
+        
         function selectAllObjects() {
             const allObjects = canvas.getObjects().filter(obj => !obj.isConnector);
             if (allObjects.length > 1) {
@@ -227,30 +227,30 @@ import * as state from './modules/state.js';
                 canvas.renderAll();
             }
         }
-
+        
         function moveObject(obj, deltaX, deltaY) {
             obj.set({
                 left: obj.left + deltaX,
                 top: obj.top + deltaY
             });
-
+            
             // Update connections if this is a connectable object
             if (obj.isShapeGroup || obj.isSubgraph || obj.isActor || obj.isClass) {
                 updateConnectionsFor(obj);
             }
-
+            
             canvas.renderAll();
         }
-
+        
         function editObjectText(obj) {
             let textObject = null;
-
+            
             if (obj.isShapeGroup || obj.isSubgraph || obj.isActor || obj.isClass || obj.isNote) {
                 textObject = obj.getObjects().find(o => o.type === 'i-text');
             } else if (obj.isText) {
                 textObject = obj;
             }
-
+            
             if (textObject) {
                 state.setCurrentEditingObject(textObject);
                 const textInput = document.getElementById('text-input');
@@ -260,7 +260,7 @@ import * as state from './modules/state.js';
                 textInput.focus();
             }
         }
-
+        
         function updateToolPalette(newDiagramType) {
             // Hide all tool groups
             flowchartTools.classList.add('hidden');
@@ -269,7 +269,7 @@ import * as state from './modules/state.js';
             erTools.classList.add('hidden');
             ganttTools.classList.add('hidden');
             journeyTools.classList.add('hidden');
-
+            
             // Show relevant tools based on diagram type
             switch(newDiagramType) {
                 case 'flowchart':
@@ -297,24 +297,24 @@ import * as state from './modules/state.js';
                     journeyTools.style.display = 'flex';
                     break;
             }
-
+            
             // Update the dropdown if it exists
             if (diagramTypeSelector) {
                 diagramTypeSelector.value = newDiagramType;
             }
-
+            
             // If current mode is not valid for new diagram type, switch to select
             const currentModeButton = document.querySelector(`[data-mode="${state.currentMode}"]`);
             if (currentModeButton && currentModeButton.closest('.tool-group.hidden')) {
                 setMode('select');
             }
-
+            
             console.log('Updated tool palette for:', newDiagramType);
         }
 
         function setMode(newMode) {
             state.setCurrentMode(newMode);
-
+            
             toolPaletteButtons.forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === newMode);
             });
@@ -336,20 +336,20 @@ import * as state from './modules/state.js';
             const canvasContainer = document.querySelector('#canvas-wrapper .absolute');
             const availableWidth = canvasWrapper.clientWidth - 30; // Account for ruler
             const availableHeight = canvasWrapper.clientHeight - 30; // Account for ruler
-
+            
             canvas.setDimensions({
                 width: availableWidth,
                 height: availableHeight
             });
-
+            
             resizeRulers();
             canvas.renderAll();
         };
-
+        
         function updateZoomDisplay(zoom) {
             zoomLevelSpan.textContent = `${Math.round(zoom * 100)}%`;
         }
-
+        
         // --- NEW: Sketchy rendering function ---
         function makeSketchy(obj, roughness = 0.5) {
             if (!obj.path) return obj; // Not a path-based object
@@ -368,7 +368,7 @@ import * as state from './modules/state.js';
         function addShape(type, options = {}) {
             const id = options.id || generateId();
             const FONT_FAMILY = 'Kalam';
-
+            
             const commonProps = {
                 originX: 'center', originY: 'center', fill: '#ffffff', stroke: '#222222',
                 strokeWidth: 2, shadow: 'rgba(0,0,0,0.05) 2px 2px 4px', cornerColor: '#6366f1',
@@ -397,66 +397,66 @@ import * as state from './modules/state.js';
             canvas.add(group);
             return group;
         }
-
+        
         function createEntity(options = {}) {
             const id = options.id || generateId();
             const entityName = options.name || 'Entity';
-
+            
             // Main entity rectangle
             const entityRect = new fabric.Rect({
                 width: 200, height: 120, fill: '#fff3e0', stroke: '#f57c00',
                 strokeWidth: 2, rx: 5, ry: 5,
                 originX: 'center', originY: 'center'
             });
-
+            
             // Entity name text
             const nameText = new fabric.IText(entityName, {
                 fontSize: 18, fontFamily: 'Kalam', fill: '#e65100', fontWeight: 'bold',
                 originX: 'center', originY: 'center', top: -30
             });
-
+            
             // Attributes text
             const attributesText = new fabric.IText(options.attributes || 'id PK\nname\nemail', {
                 fontSize: 12, fontFamily: 'Kalam', fill: '#bf360c',
                 originX: 'center', originY: 'center', top: 10, width: 180,
                 textAlign: 'left'
             });
-
+            
             const group = new fabric.Group([entityRect, nameText, attributesText], {
                 left: options.left || 200, top: options.top || 200,
                 isEntity: true, id: id, hasControls: true,
                 entityName: entityName,
                 attributes: options.attributes || 'id PK\nname\nemail'
             });
-
+            
             canvas.add(group);
             entities.push({ id: id, name: entityName, object: group });
             return group;
         }
-
+        
         function createTask(options = {}) {
             const id = options.id || generateId();
             const taskName = options.name || 'Task';
-
+            
             // Task rectangle with timeline styling
             const taskRect = new fabric.Rect({
                 width: 200, height: 40, fill: '#e3f2fd', stroke: '#1976d2',
                 strokeWidth: 2, rx: 3, ry: 3,
                 originX: 'center', originY: 'center'
             });
-
+            
             // Task name text
             const nameText = new fabric.IText(taskName, {
                 fontSize: 14, fontFamily: 'Kalam', fill: '#0d47a1', fontWeight: 'bold',
                 originX: 'center', originY: 'center', top: -10
             });
-
+            
             // Duration text
             const durationText = new fabric.IText(options.duration || '3d', {
                 fontSize: 10, fontFamily: 'Kalam', fill: '#1565c0',
                 originX: 'center', originY: 'center', top: 8
             });
-
+            
             const group = new fabric.Group([taskRect, nameText, durationText], {
                 left: options.left || 200, top: options.top || 200,
                 isTask: true, id: id, hasControls: true,
@@ -465,11 +465,11 @@ import * as state from './modules/state.js';
                 startDate: options.startDate || new Date().toISOString().split('T')[0],
                 dependencies: options.dependencies || []
             });
-
+            
             canvas.add(group);
-            tasks.push({
-                id: id,
-                name: taskName,
+            tasks.push({ 
+                id: id, 
+                name: taskName, 
                 object: group,
                 duration: options.duration || '3d',
                 startDate: options.startDate || new Date().toISOString().split('T')[0],
@@ -477,68 +477,68 @@ import * as state from './modules/state.js';
             });
             return group;
         }
-
+        
         function createMilestone(options = {}) {
             const id = options.id || generateId();
             const milestoneName = options.name || 'Milestone';
-
+            
             // Diamond shape for milestone
             const milestoneShape = new fabric.Path('M 0 -25 L 25 0 L 0 25 L -25 0 Z', {
                 fill: '#f3e5f5', stroke: '#7b1fa2', strokeWidth: 2,
                 originX: 'center', originY: 'center'
             });
-
+            
             // Milestone name text
             const nameText = new fabric.IText(milestoneName, {
                 fontSize: 12, fontFamily: 'Kalam', fill: '#4a148c', fontWeight: 'bold',
                 originX: 'center', originY: 'center', top: 35
             });
-
+            
             const group = new fabric.Group([milestoneShape, nameText], {
                 left: options.left || 200, top: options.top || 200,
                 isMilestone: true, id: id, hasControls: true,
                 milestoneName: milestoneName,
                 date: options.date || new Date().toISOString().split('T')[0]
             });
-
+            
             canvas.add(group);
-            milestones.push({
-                id: id,
-                name: milestoneName,
+            milestones.push({ 
+                id: id, 
+                name: milestoneName, 
                 object: group,
                 date: options.date || new Date().toISOString().split('T')[0]
             });
             return group;
         }
-
+        
         function createJourneyStep(options = {}) {
             const id = options.id || generateId();
             const stepName = options.name || 'Step';
-
+            
             // Step circle
             const stepCircle = new fabric.Circle({
                 radius: 30, fill: '#e8f5e8', stroke: '#2e7d32',
                 strokeWidth: 3, originX: 'center', originY: 'center'
             });
-
+            
             // Step number/icon
             const stepNumber = new fabric.IText(options.number || '1', {
                 fontSize: 16, fontFamily: 'Kalam', fill: '#1b5e20', fontWeight: 'bold',
                 originX: 'center', originY: 'center'
             });
-
+            
             // Step name text
             const nameText = new fabric.IText(stepName, {
                 fontSize: 12, fontFamily: 'Kalam', fill: '#2e7d32', fontWeight: 'bold',
                 originX: 'center', originY: 'center', top: 50
             });
-
+            
             // Score text
             const scoreText = new fabric.IText(`Score: ${options.score || '5'}`, {
                 fontSize: 10, fontFamily: 'Kalam', fill: '#388e3c',
                 originX: 'center', originY: 'center', top: 70
             });
-
+            
             const group = new fabric.Group([stepCircle, stepNumber, nameText, scoreText], {
                 left: options.left || 200, top: options.top || 200,
                 isJourneyStep: true, id: id, hasControls: true,
@@ -547,11 +547,11 @@ import * as state from './modules/state.js';
                 score: options.score || '5',
                 actors: options.actors || ['User']
             });
-
+            
             canvas.add(group);
-            journeySteps.push({
-                id: id,
-                name: stepName,
+            journeySteps.push({ 
+                id: id, 
+                name: stepName, 
                 object: group,
                 number: options.number || '1',
                 score: options.score || '5',
@@ -559,94 +559,94 @@ import * as state from './modules/state.js';
             });
             return group;
         }
-
+        
         function createJourneySection(options = {}) {
             const id = options.id || generateId();
             const sectionName = options.name || 'Section';
-
+            
             // Section header rectangle
             const sectionRect = new fabric.Rect({
                 width: 300, height: 50, fill: '#f3e5f5', stroke: '#7b1fa2',
                 strokeWidth: 2, rx: 5, ry: 5,
                 originX: 'center', originY: 'center'
             });
-
+            
             // Section name text
             const nameText = new fabric.IText(sectionName, {
                 fontSize: 16, fontFamily: 'Kalam', fill: '#4a148c', fontWeight: 'bold',
                 originX: 'center', originY: 'center'
             });
-
+            
             const group = new fabric.Group([sectionRect, nameText], {
                 left: options.left || 200, top: options.top || 100,
                 isJourneySection: true, id: id, hasControls: true,
                 sectionName: sectionName
             });
-
+            
             canvas.add(group);
-            journeySections.push({
-                id: id,
-                name: sectionName,
+            journeySections.push({ 
+                id: id, 
+                name: sectionName, 
                 object: group
             });
             return group;
         }
-
+        
         function createClass(options = {}) {
             const id = options.id || generateId();
             const className = options.name || 'Class';
-
+            
             // Main class rectangle
             const classRect = new fabric.Rect({
                 width: 200, height: 150, fill: '#f8f9fa', stroke: '#6c757d',
                 strokeWidth: 2, rx: 3, ry: 3,
                 originX: 'center', originY: 'center'
             });
-
+            
             // Class name section
             const nameRect = new fabric.Rect({
                 width: 200, height: 40, fill: '#e9ecef', stroke: '#6c757d',
                 strokeWidth: 1, rx: 3, ry: 3,
                 originX: 'center', originY: 'top', top: -75
             });
-
+            
             // Class name text
             const nameText = new fabric.IText(className, {
                 fontSize: 16, fontFamily: 'Kalam', fill: '#212529', fontWeight: 'bold',
                 originX: 'center', originY: 'center', top: -55
             });
-
+            
             // Stereotype text (if any)
             const stereotypeText = new fabric.IText(options.stereotype || '', {
                 fontSize: 12, fontFamily: 'Kalam', fill: '#6c757d',
                 originX: 'center', originY: 'center', top: -70,
                 visible: !!(options.stereotype)
             });
-
+            
             // Attributes section separator
             const attrSeparator = new fabric.Line([-100, -35, 100, -35], {
                 stroke: '#6c757d', strokeWidth: 1
             });
-
+            
             // Attributes text
             const attributesText = new fabric.IText(options.attributes || '+ attribute: type', {
                 fontSize: 12, fontFamily: 'Kalam', fill: '#495057',
                 originX: 'center', originY: 'top', top: -25, width: 180,
                 textAlign: 'left'
             });
-
+            
             // Methods section separator
             const methodSeparator = new fabric.Line([-100, 15, 100, 15], {
                 stroke: '#6c757d', strokeWidth: 1
             });
-
+            
             // Methods text
             const methodsText = new fabric.IText(options.methods || '+ method(): type', {
                 fontSize: 12, fontFamily: 'Kalam', fill: '#495057',
                 originX: 'center', originY: 'top', top: 25, width: 180,
                 textAlign: 'left'
             });
-
+            
             const group = new fabric.Group([
                 classRect, nameRect, nameText, stereotypeText,
                 attrSeparator, attributesText, methodSeparator, methodsText
@@ -658,21 +658,21 @@ import * as state from './modules/state.js';
                 attributes: options.attributes || '+ attribute: type',
                 methods: options.methods || '+ method(): type'
             });
-
+            
             canvas.add(group);
             classes.push({ id: id, name: className, object: group });
             return group;
         }
-
+        
         function createRelationship(fromClass, toClass, options = {}) {
             if (!fromClass || !toClass) return;
-
+            
             const fromPoint = fromClass.getCenterPoint();
             const toPoint = toClass.getCenterPoint();
-
+            
             let line, arrowHead, arrowTail;
             const relType = options.type || '-->';
-
+            
             // Create different line styles based on relationship type
             if (relType.includes('..')) {
                 // Dependency - dashed line
@@ -685,11 +685,11 @@ import * as state from './modules/state.js';
                     stroke: '#6c757d', strokeWidth: 2
                 });
             }
-
+            
             const angle = fabric.util.radiansToDegrees(Math.atan2(toPoint.y - fromPoint.y, toPoint.x - fromPoint.x));
-
+            
             const parts = [line];
-
+            
             // Create appropriate arrow heads based on relationship type
             if (relType.includes('|>')) {
                 // Inheritance - hollow triangle
@@ -710,7 +710,7 @@ import * as state from './modules/state.js';
                 });
                 parts.push(arrowHead);
             }
-
+            
             if (relType.includes('*')) {
                 // Composition - filled diamond
                 const diamond = new fabric.Path('M 0 -8 L 8 0 L 0 8 L -8 0 Z', {
@@ -727,7 +727,7 @@ import * as state from './modules/state.js';
                 });
                 parts.push(diamond);
             }
-
+            
             // Add relationship label if provided
             if (options.label) {
                 const label = new fabric.IText(options.label, {
@@ -738,7 +738,7 @@ import * as state from './modules/state.js';
                 });
                 parts.push(label);
             }
-
+            
             const group = new fabric.Group(parts, {
                 isRelationship: true,
                 id: options.id || generateId(),
@@ -749,12 +749,12 @@ import * as state from './modules/state.js';
                     label: options.label || ''
                 }
             });
-
+            
             canvas.add(group);
             relationships.push(group.relationshipData);
             return group;
         }
-
+        
         function createText(options = {}) {
             const id = options.id || generateId();
             const text = new fabric.IText(options.text || 'Text', {
@@ -765,7 +765,7 @@ import * as state from './modules/state.js';
             canvas.add(text);
             return text;
         }
-
+        
         function createActor(options = {}) {
             const id = options.id || generateId();
             const rect = new fabric.Rect({
@@ -773,27 +773,27 @@ import * as state from './modules/state.js';
                 strokeWidth: 2, rx: 5, ry: 5,
                 originX: 'center', originY: 'top'
             });
-
+            
             const text = new fabric.IText(options.text || 'Actor', {
                 fontSize: 16, fontFamily: 'Kalam', fill: '#1976d2', fontWeight: 'bold',
                 originX: 'center', originY: 'center'
             });
-
+            
             const lifeline = new fabric.Line([0, 20, 0, 400], {
                 stroke: '#1976d2', strokeWidth: 2, strokeDashArray: [5, 5],
                 originX: 'center', originY: 'top'
             });
-
+            
             const group = new fabric.Group([lifeline, rect, text], {
                 left: options.left || 100, top: options.top || 50,
                 isActor: true, id: id, hasControls: true
             });
-
+            
             canvas.add(group);
             actors.push({ id: id, name: options.text || 'Actor', object: group });
             return group;
         }
-
+        
         function createNote(options = {}) {
             const id = options.id || generateId();
             const rect = new fabric.Rect({
@@ -801,33 +801,33 @@ import * as state from './modules/state.js';
                 strokeWidth: 2, rx: 3, ry: 3,
                 originX: 'center', originY: 'center'
             });
-
+            
             const text = new fabric.IText(options.text || 'Note', {
                 fontSize: 14, fontFamily: 'Kalam', fill: '#e65100',
                 originX: 'center', originY: 'center', width: 180,
                 textAlign: 'center'
             });
-
+            
             const group = new fabric.Group([rect, text], {
                 left: options.left || 100, top: options.top || 100,
                 isNote: true, id: id, hasControls: true
             });
-
+            
             canvas.add(group);
             return group;
         }
-
+        
         function createMessage(fromActor, toActor, options = {}) {
             if (!fromActor || !toActor) return;
-
+            
             const fromPoint = fromActor.getCenterPoint();
             const toPoint = toActor.getCenterPoint();
             const yPos = options.yPos || Math.max(fromPoint.y, toPoint.y) + 100;
-
+            
             const line = new fabric.Line([fromPoint.x, yPos, toPoint.x, yPos], {
                 stroke: '#333', strokeWidth: 2
             });
-
+            
             // Arrow head
             const arrowHead = new fabric.Triangle({
                 width: 12, height: 12, fill: '#333',
@@ -835,16 +835,16 @@ import * as state from './modules/state.js';
                 originX: 'center', originY: 'center',
                 angle: fromPoint.x < toPoint.x ? 90 : -90
             });
-
+            
             const text = new fabric.IText(options.text || 'Message', {
                 left: (fromPoint.x + toPoint.x) / 2, top: yPos - 20,
                 fontSize: 14, fontFamily: 'Kalam', fill: '#333',
                 originX: 'center', originY: 'center',
                 backgroundColor: 'rgba(255,255,255,0.8)'
             });
-
+            
             const group = new fabric.Group([line, arrowHead, text], {
-                isMessage: true,
+                isMessage: true, 
                 id: options.id || generateId(),
                 messageData: {
                     from: fromActor.id,
@@ -853,22 +853,22 @@ import * as state from './modules/state.js';
                     type: options.type || '->>' // ->>, -->>, ->, --
                 }
             });
-
+            
             canvas.add(group);
             messages.push(group.messageData);
             return group;
         }
-
+        
         function createSubgraph(options = {}) {
             const id = options.id || generateId();
             const rect = new fabric.Rect({
-                width: options.width || 400, height: options.height || 300,
+                width: options.width || 400, height: options.height || 300, 
                 fill: 'rgba(200, 200, 200, 0.1)',
                 stroke: '#aaaaaa', strokeWidth: 2, rx: 0, ry: 0,
                 strokeDashArray: [8, 4],
                 originX: 'left', originY: 'top'
             });
-
+            
             makeSketchy(rect, 2);
 
             const title = new fabric.IText(options.title || 'Subgraph', {
@@ -903,14 +903,14 @@ import * as state from './modules/state.js';
                 height: 180,
                 editingBorderColor: 'blue',
             });
-
+            
             const group = new fabric.Group([foreignObject, text], {
                 left: options.left || 200,
                 top: options.top || 200,
                 isMarkdown: true,
                 id: id
             });
-
+            
             canvas.add(group);
             return group;
         }
@@ -920,23 +920,23 @@ import * as state from './modules/state.js';
             [shapePropertiesDiv, textPropertiesDiv, connectorPropertiesDiv, subgraphPropertiesDiv].forEach(div => div && div.classList.add('hidden'));
 
             if (!obj) return;
-
+            
             if (obj.isShapeGroup) {
                 const shape = obj.getObjects()[0];
                 const text = obj.getObjects()[1];
                 shapePropertiesDiv.classList.remove('hidden');
                 textPropertiesDiv.classList.remove('hidden');
-
+                
                 // Populate object name and text fields
                 document.getElementById('object-name').value = obj.id || '';
                 document.getElementById('object-text').value = text.get('text') || '';
-
+                
                 fillColorInput.value = shape.get('fill');
                 strokeColorInput.value = shape.get('stroke');
                 strokeWidthInput.value = shape.get('strokeWidth');
                 cornerRadiusControl.classList.toggle('hidden', obj.shapeType !== 'rect');
                 if (obj.shapeType === 'rect') cornerRadiusInput.value = shape.get('rx');
-
+                
                 textColorInput.value = text.get('fill');
                 fontSizeInput.value = text.get('fontSize');
                 fontFamilyInput.value = text.get('fontFamily');
@@ -946,11 +946,11 @@ import * as state from './modules/state.js';
                 textPropertiesDiv.classList.remove('hidden');
                 document.getElementById('text-object-info').classList.remove('hidden');
                 document.getElementById('text-content-info').classList.remove('hidden');
-
+                
                 // Populate standalone text object fields
                 document.getElementById('text-object-name').value = obj.id || '';
                 document.getElementById('text-content').value = obj.get('text') || '';
-
+                
                 textColorInput.value = obj.get('fill');
                 fontSizeInput.value = obj.get('fontSize');
                 fontFamilyInput.value = obj.get('fontFamily');
@@ -963,7 +963,7 @@ import * as state from './modules/state.js';
                 const objects = obj.getObjects();
                 const rect = objects.find(o => o.type === 'rect');
                 const title = objects.find(o => o.type === 'i-text');
-
+                
                 // Populate subgraph fields
                 document.getElementById('subgraph-object-name').value = obj.id || '';
                 if (title) document.getElementById('subgraph-title').value = title.text;
@@ -973,7 +973,7 @@ import * as state from './modules/state.js';
                 }
             }
         }
-
+        
         function updateConnectorInspector(conn) {
             if (!conn) return;
             document.getElementById('connector-text').value = conn.text || '';
@@ -981,7 +981,7 @@ import * as state from './modules/state.js';
                 radio.checked = radio.value === conn.type;
             });
         }
-
+        
         // --- Connector Drawing Logic ---
         function redrawConnector(conn) {
             if (conn.line) canvas.remove(conn.line);
@@ -999,7 +999,7 @@ import * as state from './modules/state.js';
             makeSketchy(line, 1);
 
             const angle = fabric.util.radiansToDegrees(Math.atan2(toPoint.y - fromPoint.y, toPoint.x - fromPoint.x));
-
+            
             const parts = [line];
             if (conn.type.includes('>')) {
                 const arrowHead = new fabric.Triangle({ width: 15, height: 15, fill: '#222222', angle: angle + 90, left: toPoint.x, top: toPoint.y, originX: 'center', originY: 'center' });
@@ -1009,7 +1009,7 @@ import * as state from './modules/state.js';
                 const arrowTail = new fabric.Triangle({ width: 15, height: 15, fill: '#222222', angle: angle - 90, left: fromPoint.x, top: fromPoint.y, originX: 'center', originY: 'center' });
                 parts.push(arrowTail);
             }
-
+            
             if (conn.text) {
                 const text = new fabric.IText(conn.text, {
                     left: (fromPoint.x + toPoint.x) / 2,
@@ -1045,20 +1045,20 @@ import * as state from './modules/state.js';
         // --- Context Menu Functions ---
         function showContextMenu(event, obj) {
             event.preventDefault();
-
+            
             // Remove existing context menu
             const existingMenu = document.querySelector('.context-menu');
             if (existingMenu) {
                 existingMenu.remove();
             }
-
+            
             const menu = document.createElement('div');
             menu.className = 'context-menu';
             menu.style.left = `${event.clientX}px`;
             menu.style.top = `${event.clientY}px`;
-
+            
             const menuItems = [];
-
+            
             if (obj) {
                 // Object-specific actions
                 menuItems.push(
@@ -1082,7 +1082,7 @@ import * as state from './modules/state.js';
                     { icon: '🏠', text: 'Reset Zoom', action: () => document.getElementById('zoom-reset-btn').click() }
                 );
             }
-
+            
             menuItems.forEach((item, index) => {
                 if (item.divider) {
                     const divider = document.createElement('div');
@@ -1092,20 +1092,20 @@ import * as state from './modules/state.js';
                     const menuItem = document.createElement('div');
                     menuItem.className = `context-menu-item ${item.disabled ? 'disabled' : ''} ${item.danger ? 'text-red-600' : ''}`;
                     menuItem.innerHTML = `<span>${item.icon}</span><span>${item.text}</span>`;
-
+                    
                     if (!item.disabled) {
                         menuItem.addEventListener('click', () => {
                             item.action();
                             hideContextMenu();
                         });
                     }
-
+                    
                     menu.appendChild(menuItem);
                 }
             });
-
+            
             document.body.appendChild(menu);
-
+            
             // Position menu to stay within viewport
             const rect = menu.getBoundingClientRect();
             if (rect.right > window.innerWidth) {
@@ -1115,23 +1115,23 @@ import * as state from './modules/state.js';
                 menu.style.top = `${event.clientY - rect.height}px`;
             }
         }
-
+        
         function hideContextMenu() {
             const menu = document.querySelector('.context-menu');
             if (menu) {
                 menu.remove();
             }
         }
-
+        
         // --- Mobile Panel Toggle ---
         function setupMobilePanelToggle() {
             const mobileToggle = document.getElementById('mobile-panel-toggle');
             const rightPanel = document.getElementById('right-panel');
-
+            
             if (mobileToggle) {
                 mobileToggle.addEventListener('click', () => {
                     rightPanel.classList.toggle('mobile-open');
-
+                    
                     if (rightPanel.classList.contains('mobile-open')) {
                         mobileToggle.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
                     } else {
@@ -1143,7 +1143,7 @@ import * as state from './modules/state.js';
                         mobileToggle.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>`;
                     }
                 });
-
+                
                 // Close panel when clicking outside on mobile
                 document.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768 && rightPanel.classList.contains('mobile-open')) {
@@ -1156,13 +1156,13 @@ import * as state from './modules/state.js';
                 });
             }
         }
-
+        
         // --- Enhanced Notification System ---
         function showNotification(message, type = 'info', duration = 3000) {
             // Create notification element with enhanced styling
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
-
+            
             // Add icon based on type
             const icons = {
                 success: '✅',
@@ -1170,16 +1170,16 @@ import * as state from './modules/state.js';
                 warning: '⚠️',
                 info: 'ℹ️'
             };
-
+            
             notification.innerHTML = `
                 <div class="flex items-center gap-2">
                     <span class="text-lg">${icons[type] || icons.info}</span>
                     <span>${message}</span>
                 </div>
             `;
-
+            
             document.body.appendChild(notification);
-
+            
             // Auto-remove after specified duration
             setTimeout(() => {
                 notification.classList.add('fade-out');
@@ -1190,14 +1190,14 @@ import * as state from './modules/state.js';
                 }, 300);
             }, duration);
         }
-
+        
         // --- Event Listeners Setup ---
         function setupEventListeners() {
             toolPaletteButtons.forEach(btn => {
                 btn.addEventListener('click', () => setMode(btn.dataset.mode));
             });
-
-
+            
+            
             document.getElementById('bring-to-front').addEventListener('click', () => {
                 const activeObj = canvas.getActiveObject();
                 if (activeObj) {
@@ -1240,12 +1240,12 @@ import * as state from './modules/state.js';
                     }
                 });
             });
-
+            
             const allInputs = document.querySelectorAll('#properties-pane input, #properties-pane select');
             allInputs.forEach(input => input.addEventListener('input', (e) => {
                 const activeObj = canvas.getActiveObject();
                 if (!activeObj) return;
-
+                
                 const textObj = activeObj.isShapeGroup ? activeObj.getObjects().find(o => o.type === 'i-text') : (activeObj.isText ? activeObj : null);
                 const shapeObj = activeObj.isShapeGroup ? activeObj.getObjects()[0] : (activeObj.isShape ? activeObj : null);
                 const subgraphObjects = activeObj.isSubgraph ? activeObj.getObjects() : [];
@@ -1253,7 +1253,7 @@ import * as state from './modules/state.js';
                 const subgraphTitle = subgraphObjects.find(o => o.type === 'i-text');
 
                 switch (e.target.id) {
-                    case 'object-name':
+                    case 'object-name': 
                         if(activeObj.isShapeGroup) {
                             // Update object ID and regenerate connections
                             const oldId = activeObj.id;
@@ -1301,7 +1301,7 @@ import * as state from './modules/state.js';
                     case 'subgraph-title': if(subgraphTitle) subgraphTitle.set('text', e.target.value); break;
                     case 'subgraph-fill-color': if(subgraphRect) subgraphRect.set('fill', e.target.value); break;
                     case 'subgraph-stroke-color': if(subgraphRect) subgraphRect.set('stroke', e.target.value); break;
-                    case 'connector-text':
+                    case 'connector-text': 
                          if (activeObj.isConnector) {
                             activeObj.connection.text = e.target.value;
                             redrawConnector(activeObj.connection);
@@ -1309,17 +1309,17 @@ import * as state from './modules/state.js';
                         }
                         break;
                 }
-
+                
                 // For grouped objects, we need to ensure the group stays selected and gets updated properly
                 if (activeObj.isShapeGroup || activeObj.isSubgraph || activeObj.isClass) {
                     // Force the group to update its internal coordinates and bounds
                     activeObj.dirty = true;
                     activeObj.set('dirty', true);
-
+                    
                     // Make sure the object remains selected after the change
                     canvas.setActiveObject(activeObj);
                 }
-
+                
                 canvas.renderAll();
             }));
 
@@ -1344,17 +1344,17 @@ import * as state from './modules/state.js';
             // Add context menu support
             canvas.on('mouse:down', function(options) {
                 const evt = options.e;
-
+                
                 // Handle right-click for context menu
                 if (evt.button === 2) { // Right mouse button
                     evt.preventDefault();
                     showContextMenu(evt, options.target);
                     return;
                 }
-
+                
                 // Hide context menu on any other click
                 hideContextMenu();
-
+                
                 if (options.target == null && state.currentMode === 'select') {
                     state.setPanning(true);
                     state.setLastPosX(evt.clientX);
@@ -1369,7 +1369,7 @@ import * as state from './modules/state.js';
                     canvas.add(state.activeLine);
                 }
             });
-
+            
             canvas.on({
                 'mouse:move': (options) => {
                     if (state.isPanning) {
@@ -1393,7 +1393,7 @@ import * as state from './modules/state.js';
                     } else if (state.currentMode.startsWith('add-') && options.target == null) {
                         const type = state.currentMode.split('-')[1];
                         const pointer = canvas.getPointer(options.e);
-
+                        
                         if (type === 'text') {
                             createText({ left: pointer.x, top: pointer.y });
                         } else if (type === 'subgraph') {
@@ -1474,7 +1474,7 @@ import * as state from './modules/state.js';
                         } else if (target.isText) {
                             textObject = target;
                         }
-
+                        
                         if (textObject) {
                             state.setCurrentEditingObject(textObject);
                             textInput.value = textObject.text;
@@ -1500,15 +1500,15 @@ import * as state from './modules/state.js';
                 // Check if user is typing in an input field or textarea
                 const activeElement = document.activeElement;
                 const isTyping = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'SELECT');
-
+                
                 // Check if any modal is open
                 const textModal = document.getElementById('text-modal');
-                const isModalOpen = !textModal.classList.contains('hidden') ||
+                const isModalOpen = !textModal.classList.contains('hidden') || 
                                    !document.getElementById('save-project-modal').classList.contains('hidden') ||
                                    !document.getElementById('load-project-modal').classList.contains('hidden') ||
                                    !document.getElementById('saved-projects-modal').classList.contains('hidden') ||
                                    !document.getElementById('load-modal').classList.contains('hidden');
-
+                
                 // If typing in input or modal is open, only handle specific keys
                 if (isTyping || isModalOpen) {
                     if (e.key === 'Escape') {
@@ -1524,9 +1524,9 @@ import * as state from './modules/state.js';
                     }
                     return;
                 }
-
+                
                 const activeObj = canvas.getActiveObject();
-
+                
                 // Handle keyboard shortcuts
                 switch (e.key.toLowerCase()) {
                     case 'delete':
@@ -1535,7 +1535,7 @@ import * as state from './modules/state.js';
                             deleteObject(activeObj);
                         }
                         break;
-
+                        
                     case 'escape':
                         if (state.currentMode === 'connector') {
                             setMode('select');
@@ -1543,7 +1543,7 @@ import * as state from './modules/state.js';
                         canvas.discardActiveObject();
                         canvas.renderAll();
                         break;
-
+                        
                     case 's':
                         if (e.ctrlKey || e.metaKey) {
                             e.preventDefault();
@@ -1552,14 +1552,14 @@ import * as state from './modules/state.js';
                             setMode('select');
                         }
                         break;
-
+                        
                     case 'o':
                         if (e.ctrlKey || e.metaKey) {
                             e.preventDefault();
                             document.getElementById('load-project-btn').click();
                         }
                         break;
-
+                        
                     case 'c':
                         if (e.ctrlKey || e.metaKey) {
                             e.preventDefault();
@@ -1568,64 +1568,64 @@ import * as state from './modules/state.js';
                             setMode('connector');
                         }
                         break;
-
+                        
                     case 'v':
                         if (e.ctrlKey || e.metaKey) {
                             e.preventDefault();
                             pasteObject();
                         }
                         break;
-
+                        
                     case 'd':
                         if (e.ctrlKey || e.metaKey) {
                             e.preventDefault();
                             duplicateObject();
                         }
                         break;
-
+                        
                     case 'a':
                         if (e.ctrlKey || e.metaKey) {
                             e.preventDefault();
                             selectAllObjects();
                         }
                         break;
-
+                        
                     case 'r':
                         if (!e.ctrlKey && !e.metaKey) {
                             setMode('add-rect');
                         }
                         break;
-
+                        
                     case 'e':
                         if (!e.ctrlKey && !e.metaKey) {
                             setMode('add-rounded');
                         }
                         break;
-
+                        
                     case 'l':
                         if (!e.ctrlKey && !e.metaKey) {
                             setMode('add-circle');
                         }
                         break;
-
+                        
                     case 'm':
                         if (!e.ctrlKey && !e.metaKey) {
                             setMode('add-diamond');
                         }
                         break;
-
+                        
                     case 't':
                         if (!e.ctrlKey && !e.metaKey) {
                             setMode('add-text');
                         }
                         break;
-
+                        
                     case 'g':
                         if (!e.ctrlKey && !e.metaKey) {
                             setMode('add-subgraph');
                         }
                         break;
-
+                        
                     case '+':
                     case '=':
                         if (e.ctrlKey || e.metaKey) {
@@ -1633,55 +1633,55 @@ import * as state from './modules/state.js';
                             document.getElementById('zoom-in-btn').click();
                         }
                         break;
-
+                        
                     case '-':
                         if (e.ctrlKey || e.metaKey) {
                             e.preventDefault();
                             document.getElementById('zoom-out-btn').click();
                         }
                         break;
-
+                        
                     case '0':
                         if (e.ctrlKey || e.metaKey) {
                             e.preventDefault();
                             document.getElementById('zoom-reset-btn').click();
                         }
                         break;
-
+                        
                     case 'arrowup':
                         if (activeObj) {
                             e.preventDefault();
                             moveObject(activeObj, 0, e.shiftKey ? -10 : -1);
                         }
                         break;
-
+                        
                     case 'arrowdown':
                         if (activeObj) {
                             e.preventDefault();
                             moveObject(activeObj, 0, e.shiftKey ? 10 : 1);
                         }
                         break;
-
+                        
                     case 'arrowleft':
                         if (activeObj) {
                             e.preventDefault();
                             moveObject(activeObj, e.shiftKey ? -10 : -1, 0);
                         }
                         break;
-
+                        
                     case 'arrowright':
                         if (activeObj) {
                             e.preventDefault();
                             moveObject(activeObj, e.shiftKey ? 10 : 1, 0);
                         }
                         break;
-
+                        
                     case 'enter':
                         if (activeObj) {
                             editObjectText(activeObj);
                         }
                         break;
-
+                        
                     case 'f2':
                         if (activeObj) {
                             editObjectText(activeObj);
@@ -1690,12 +1690,12 @@ import * as state from './modules/state.js';
                 }
             });
             window.addEventListener('resize', resizeCanvas);
-
+            
             // Export functionality
             document.getElementById('export-png-btn').addEventListener('click', exportToPNG);
             document.getElementById('export-svg-btn').addEventListener('click', exportToSVG);
             document.getElementById('export-pdf-btn').addEventListener('click', exportToPDF);
-
+            
             // Load Modal Listeners
             const loadModal = document.getElementById('load-modal');
             document.getElementById('load-chart-btn').addEventListener('click', () => loadModal.classList.remove('hidden'));
@@ -1705,21 +1705,21 @@ import * as state from './modules/state.js';
                 loadFromMermaidCode(code);
                 loadModal.classList.add('hidden');
             });
-
+            
             // Save/Load Project Modal Listeners
             const saveProjectModal = document.getElementById('save-project-modal');
             const loadProjectModal = document.getElementById('load-project-modal');
             const savedProjectsModal = document.getElementById('saved-projects-modal');
-
+            
             // Save Project Modal
             document.getElementById('save-project-btn').addEventListener('click', () => {
                 saveProjectModal.classList.remove('hidden');
             });
-
+            
             document.getElementById('cancel-save-project').addEventListener('click', () => {
                 saveProjectModal.classList.add('hidden');
             });
-
+            
             document.getElementById('save-to-storage').addEventListener('click', () => {
                 const projectName = document.getElementById('project-name').value.trim();
                 if (saveProjectToStorage(projectName)) {
@@ -1727,7 +1727,7 @@ import * as state from './modules/state.js';
                     document.getElementById('project-name').value = '';
                 }
             });
-
+            
             document.getElementById('save-to-file').addEventListener('click', () => {
                 const projectName = document.getElementById('project-name').value.trim();
                 if (saveProjectToFile(projectName)) {
@@ -1735,48 +1735,48 @@ import * as state from './modules/state.js';
                     document.getElementById('project-name').value = '';
                 }
             });
-
+            
             // Load Project Modal
             document.getElementById('load-project-btn').addEventListener('click', () => {
                 loadProjectModal.classList.remove('hidden');
             });
-
+            
             document.getElementById('cancel-load-project').addEventListener('click', () => {
                 loadProjectModal.classList.add('hidden');
             });
-
+            
             document.getElementById('load-from-storage').addEventListener('click', () => {
                 loadProjectModal.classList.add('hidden');
                 loadProjectFromStorage();
             });
-
+            
             document.getElementById('load-from-file').addEventListener('click', () => {
                 loadProjectModal.classList.add('hidden');
                 loadProjectFromFile();
             });
-
+            
             // Saved Projects Modal
             document.getElementById('cancel-saved-projects').addEventListener('click', () => {
                 savedProjectsModal.classList.add('hidden');
             });
-
+            
             // Diagram Type Selector
             diagramTypeSelector.addEventListener('change', (e) => {
                 const newDiagramType = e.target.value;
-
+                
                 // If switching diagram types, ask for confirmation if there are objects on canvas
                 const hasObjects = canvas.getObjects().length > 0;
                 if (hasObjects && diagramType !== newDiagramType) {
                     const confirmed = confirm(
                         `Switching to ${newDiagramType} will clear the current diagram. Continue?`
                     );
-
+                    
                     if (!confirmed) {
                         // Reset the dropdown to the current diagram type
                         diagramTypeSelector.value = diagramType;
                         return;
                     }
-
+                    
                     // Clear the canvas
                     canvas.clear();
                     connections = [];
@@ -1785,13 +1785,13 @@ import * as state from './modules/state.js';
                     classes = [];
                     relationships = [];
                 }
-
+                
                 // Update the diagram type and tool palette
                 diagramType = newDiagramType;
                 updateToolPalette(diagramType);
                 generateAndRenderMermaid();
             });
-
+            
             // Close modals when clicking outside
             [saveProjectModal, loadProjectModal, savedProjectsModal].forEach(modal => {
                 modal.addEventListener('click', (e) => {
@@ -1800,23 +1800,23 @@ import * as state from './modules/state.js';
                     }
                 });
             });
-
+            
             // Grid and Alignment Controls
             document.getElementById('toggle-grid').addEventListener('click', (e) => {
                 e.target.classList.toggle('active');
                 const isActive = e.target.classList.contains('active');
-
+                
                 if (isActive) {
                     canvasWrapper.classList.add('grid-background');
                 } else {
                     canvasWrapper.classList.remove('grid-background');
                 }
             });
-
+            
             document.getElementById('toggle-snap').addEventListener('click', (e) => {
                 e.target.classList.toggle('active');
                 const isActive = e.target.classList.contains('active');
-
+                
                 // Enable/disable snap to grid
                 if (isActive) {
                     enableSnapToGrid();
@@ -1824,7 +1824,7 @@ import * as state from './modules/state.js';
                     canvas.off('object:moving');
                 }
             });
-
+            
             // Alignment toolbar buttons
             document.querySelectorAll('.alignment-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -1832,14 +1832,14 @@ import * as state from './modules/state.js';
                     alignSelectedObjects(alignment);
                 });
             });
-
+            
             // Debounced mermaid generation to avoid excessive renders
             let mermaidTimeout;
             const debouncedGenerate = () => {
                 clearTimeout(mermaidTimeout);
                 mermaidTimeout = setTimeout(generateAndRenderMermaid, 300);
             };
-
+            
             canvas.on('object:modified', debouncedGenerate);
             canvas.on('object:added', debouncedGenerate);
             canvas.on('object:removed', debouncedGenerate);
@@ -1892,7 +1892,7 @@ import * as state from './modules/state.js';
 
             function positionMarkdownEditor() {
                 if (!currentMarkdownObject) return;
-                const- { left, top, width, height } = currentMarkdownObject.getBoundingRect();
+                const { left, top, width, height } = currentMarkdownObject.getBoundingRect();
                 markdownEditor.style.left = `${left}px`;
                 markdownEditor.style.top = `${top}px`;
                 markdownEditor.style.width = `${width}px`;
@@ -1981,19 +1981,19 @@ import * as state from './modules/state.js';
                 preview.innerHTML = `<div class="text-red-500 p-4 text-sm">Generation Error:<br><pre class="text-xs mt-2 bg-gray-100 p-2 rounded">${error.message}</pre></div>`;
             }
         }
-
+        
         async function generateERDiagram() {
             let mermaidString = 'erDiagram\n';
-
+            
             // Get all entities
             const entityObjects = canvas.getObjects().filter(o => o.isEntity);
             const erRelationshipObjects = canvas.getObjects().filter(o => o.isERRelationship);
-
+            
             // Add entity definitions
             entityObjects.forEach(entityObj => {
                 const entityName = entityObj.entityName || 'Entity';
                 mermaidString += `    ${entityName} {\n`;
-
+                
                 // Add attributes
                 if (entityObj.attributes && entityObj.attributes.trim()) {
                     const attributes = entityObj.attributes.split('\n').filter(attr => attr.trim());
@@ -2011,87 +2011,87 @@ import * as state from './modules/state.js';
                         }
                     });
                 }
-
+                
                 mermaidString += `    }\n`;
             });
-
+            
             // Add relationships from connections
             connections.forEach(conn => {
                 const fromEntity = entityObjects.find(e => e.id === conn.from);
                 const toEntity = entityObjects.find(e => e.id === conn.to);
-
+                
                 if (fromEntity && toEntity) {
                     const fromName = fromEntity.entityName || 'Entity';
                     const toName = toEntity.entityName || 'Entity';
                     const relationshipType = conn.type || '||--o{';
                     const relationshipName = conn.text || 'relates';
-
+                    
                     mermaidString += `    ${fromName} ${relationshipType} ${toName} : ${relationshipName}\n`;
                 }
             });
-
+            
             // If no entities, add a placeholder
             if (entityObjects.length === 0) {
                 mermaidString += `    CUSTOMER {\n        string name\n        string email\n    }\n`;
                 mermaidString += `    ORDER {\n        int id PK\n        int customer_id FK\n    }\n`;
                 mermaidString += `    CUSTOMER ||--o{ ORDER : places\n`;
             }
-
+            
             await renderMermaidString(mermaidString);
         }
-
+        
         async function generateGanttDiagram() {
             let mermaidString = 'gantt\n    title Project Timeline\n    dateFormat YYYY-MM-DD\n    axisFormat %m/%d\n\n';
-
+            
             // Get all tasks and milestones
             const taskObjects = canvas.getObjects().filter(o => o.isTask);
             const milestoneObjects = canvas.getObjects().filter(o => o.isMilestone);
             const sectionObjects = canvas.getObjects().filter(o => o.isJourneySection); // Reuse sections
-
+            
             // Sort tasks by position (top to bottom)
             taskObjects.sort((a, b) => a.top - b.top);
             milestoneObjects.sort((a, b) => a.top - b.top);
-
+            
             // Add sections if any
             if (sectionObjects.length > 0) {
                 sectionObjects.forEach(section => {
                     const sectionName = section.sectionName || 'Development';
                     mermaidString += `    section ${sectionName}\n`;
-
+                    
                     // Find tasks in this section (rough proximity)
-                    const sectionTasks = taskObjects.filter(task =>
+                    const sectionTasks = taskObjects.filter(task => 
                         Math.abs(task.top - section.top) < 100
                     );
-
+                    
                     sectionTasks.forEach(task => {
                         const taskName = task.taskName || 'Task';
                         const duration = task.duration || '3d';
                         const startDate = task.startDate || '2024-01-01';
-
+                        
                         mermaidString += `        ${taskName} :${task.id}, ${startDate}, ${duration}\n`;
                     });
                 });
             } else {
                 // Default section
                 mermaidString += `    section Development\n`;
-
+                
                 taskObjects.forEach(task => {
                     const taskName = task.taskName || 'Task';
                     const duration = task.duration || '3d';
                     const startDate = task.startDate || '2024-01-01';
-
+                    
                     mermaidString += `        ${taskName} :${task.id}, ${startDate}, ${duration}\n`;
                 });
             }
-
+            
             // Add milestones
             milestoneObjects.forEach(milestone => {
                 const milestoneName = milestone.milestoneName || 'Milestone';
                 const date = milestone.date || '2024-01-15';
-
+                
                 mermaidString += `        ${milestoneName} :milestone, ${date}, 0d\n`;
             });
-
+            
             // If no tasks, add placeholder
             if (taskObjects.length === 0 && milestoneObjects.length === 0) {
                 mermaidString += `    section Planning\n`;
@@ -2101,38 +2101,38 @@ import * as state from './modules/state.js';
                 mermaidString += `        Implementation :task3, after task2, 7d\n`;
                 mermaidString += `        Testing :milestone, 2024-01-16, 0d\n`;
             }
-
+            
             await renderMermaidString(mermaidString);
         }
-
+        
         async function generateJourneyDiagram() {
             let mermaidString = 'journey\n    title User Journey\n\n';
-
+            
             // Get all journey steps and sections
             const stepObjects = canvas.getObjects().filter(o => o.isJourneyStep);
             const sectionObjects = canvas.getObjects().filter(o => o.isJourneySection);
-
+            
             // Sort by position (left to right, top to bottom)
             stepObjects.sort((a, b) => a.top - b.top || a.left - b.left);
             sectionObjects.sort((a, b) => a.top - b.top);
-
+            
             // Add sections with their steps
             if (sectionObjects.length > 0) {
                 sectionObjects.forEach(section => {
                     const sectionName = section.sectionName || 'Experience';
                     mermaidString += `    section ${sectionName}\n`;
-
+                    
                     // Find steps in this section (rough proximity based on vertical position)
-                    const sectionSteps = stepObjects.filter(step =>
+                    const sectionSteps = stepObjects.filter(step => 
                         step.top > section.top && step.top < section.top + 150
                     );
-
+                    
                     if (sectionSteps.length > 0) {
                         sectionSteps.forEach(step => {
                             const stepName = step.stepName || 'Step';
                             const score = step.score || '5';
                             const actors = step.actors || ['User'];
-
+                            
                             mermaidString += `        ${stepName}: ${score}: ${actors.join(', ')}\n`;
                         });
                     } else {
@@ -2143,13 +2143,13 @@ import * as state from './modules/state.js';
             } else {
                 // Default section with all steps
                 mermaidString += `    section User Experience\n`;
-
+                
                 if (stepObjects.length > 0) {
                     stepObjects.forEach(step => {
                         const stepName = step.stepName || 'Step';
                         const score = step.score || '5';
                         const actors = step.actors || ['User'];
-
+                        
                         mermaidString += `        ${stepName}: ${score}: ${actors.join(', ')}\n`;
                     });
                 } else {
@@ -2160,38 +2160,38 @@ import * as state from './modules/state.js';
                     mermaidString += `        Use Product: 4: User\n`;
                 }
             }
-
+            
             await renderMermaidString(mermaidString);
         }
-
+        
         async function generateSequenceDiagram() {
             let mermaidString = 'sequenceDiagram\n';
-
+            
             // Get all actors
             const actorObjects = canvas.getObjects().filter(o => o.isActor);
             const messageObjects = canvas.getObjects().filter(o => o.isMessage);
             const noteObjects = canvas.getObjects().filter(o => o.isNote);
-
+            
             // Sort actors by x position
             actorObjects.sort((a, b) => a.left - b.left);
-
+            
             // Add participant declarations
             actorObjects.forEach(actor => {
                 const textObj = actor.getObjects().find(o => o.type === 'i-text');
                 const actorName = textObj ? textObj.text : 'Actor';
                 mermaidString += `    participant ${actorName}\n`;
             });
-
+            
             // Sort messages by y position (top to bottom)
             messageObjects.sort((a, b) => a.top - b.top);
-
+            
             // Add messages
             messageObjects.forEach(msgObj => {
                 if (msgObj.messageData) {
                     const { from, to, text, type } = msgObj.messageData;
                     const fromActor = actorObjects.find(a => a.id === from);
                     const toActor = actorObjects.find(a => a.id === to);
-
+                    
                     if (fromActor && toActor) {
                         const fromName = fromActor.getObjects().find(o => o.type === 'i-text')?.text || 'Actor';
                         const toName = toActor.getObjects().find(o => o.type === 'i-text')?.text || 'Actor';
@@ -2199,7 +2199,7 @@ import * as state from './modules/state.js';
                     }
                 }
             });
-
+            
             // Add notes
             noteObjects.forEach(note => {
                 const textObj = note.getObjects().find(o => o.type === 'i-text');
@@ -2214,28 +2214,28 @@ import * as state from './modules/state.js';
                         closestActor = actor;
                     }
                 });
-
+                
                 if (closestActor) {
                     const actorName = closestActor.getObjects().find(o => o.type === 'i-text')?.text || 'Actor';
                     const position = note.left > closestActor.left ? 'right' : 'left';
                     mermaidString += `    Note ${position} of ${actorName}: ${noteText}\n`;
                 }
             });
-
+            
             await renderMermaidString(mermaidString);
         }
-
+        
         async function generateClassDiagram() {
             let mermaidString = 'classDiagram\n';
-
+            
             // Get all classes
             const classObjects = canvas.getObjects().filter(o => o.isClass);
             const relationshipObjects = canvas.getObjects().filter(o => o.isRelationship);
-
+            
             // Add class definitions
             classObjects.forEach(classObj => {
                 const className = classObj.className || 'Class';
-
+                
                 // Add stereotype if present
                 if (classObj.stereotype) {
                     mermaidString += `    class ${className} {\n`;
@@ -2243,7 +2243,7 @@ import * as state from './modules/state.js';
                 } else {
                     mermaidString += `    class ${className} {\n`;
                 }
-
+                
                 // Add attributes
                 if (classObj.attributes && classObj.attributes.trim()) {
                     const attributes = classObj.attributes.split('\n').filter(attr => attr.trim());
@@ -2251,7 +2251,7 @@ import * as state from './modules/state.js';
                         mermaidString += `        ${attr.trim()}\n`;
                     });
                 }
-
+                
                 // Add methods
                 if (classObj.methods && classObj.methods.trim()) {
                     const methods = classObj.methods.split('\n').filter(method => method.trim());
@@ -2259,21 +2259,21 @@ import * as state from './modules/state.js';
                         mermaidString += `        ${method.trim()}\n`;
                     });
                 }
-
+                
                 mermaidString += `    }\n`;
             });
-
+            
             // Add relationships
             relationshipObjects.forEach(relObj => {
                 if (relObj.relationshipData) {
                     const { from, to, type, label } = relObj.relationshipData;
                     const fromClass = classObjects.find(c => c.id === from);
                     const toClass = classObjects.find(c => c.id === to);
-
+                    
                     if (fromClass && toClass) {
                         const fromName = fromClass.className || 'Class';
                         const toName = toClass.className || 'Class';
-
+                        
                         if (label && label.trim()) {
                             mermaidString += `    ${fromName} ${type} ${toName} : ${label}\n`;
                         } else {
@@ -2282,14 +2282,14 @@ import * as state from './modules/state.js';
                     }
                 }
             });
-
+            
             // Add standalone class definitions for classes without explicit definitions
             classObjects.forEach(classObj => {
                 const className = classObj.className || 'Class';
                 if (!mermaidString.includes(`class ${className} {`)) {
                     // Just add the class name without brackets
                     mermaidString += `    ${className}\n`;
-
+                    
                     // Add individual attribute and method lines
                     if (classObj.attributes && classObj.attributes.trim()) {
                         const attributes = classObj.attributes.split('\n').filter(attr => attr.trim());
@@ -2297,7 +2297,7 @@ import * as state from './modules/state.js';
                             mermaidString += `    ${className} : ${attr.trim()}\n`;
                         });
                     }
-
+                    
                     if (classObj.methods && classObj.methods.trim()) {
                         const methods = classObj.methods.split('\n').filter(method => method.trim());
                         methods.forEach(method => {
@@ -2306,21 +2306,21 @@ import * as state from './modules/state.js';
                     }
                 }
             });
-
+            
             await renderMermaidString(mermaidString);
         }
-
+        
         async function generateFlowchart() {
             const shapes = canvas.getObjects().filter(o => o.isShapeGroup);
             const subgraphs = canvas.getObjects().filter(o => o.isSubgraph);
-
+            
             shapes.forEach(shape => {
                 shape.subgraphId = null;
                 for (const subgraph of subgraphs) {
                     // Check if shape is contained within subgraph bounds
                     const shapeBounds = shape.getBoundingRect();
                     const subgraphBounds = subgraph.getBoundingRect();
-
+                    
                     if (shapeBounds.left >= subgraphBounds.left &&
                         shapeBounds.top >= subgraphBounds.top &&
                         shapeBounds.left + shapeBounds.width <= subgraphBounds.left + subgraphBounds.width &&
@@ -2332,7 +2332,7 @@ import * as state from './modules/state.js';
             });
 
             let mermaidString = `flowchart ${flowchartDirection}\n`;
-
+            
             const nodesOutside = shapes.filter(s => !s.subgraphId);
             nodesOutside.forEach(shape => {
                 mermaidString += `    ${getNodeDefinition(shape)};\n`;
@@ -2379,11 +2379,11 @@ import * as state from './modules/state.js';
                     });
                 }
             });
-
+            
             function getNodeDefinition(shape) {
                 const textObj = shape.getObjects().find(o => o.type === 'i-text');
                 const text = textObj && textObj.text ? textObj.text.replace(/"/g, '#quot;') : 'Node';
-
+                
                 let shapeSyntax;
                 switch (shape.shapeType) {
                     case 'rect': shapeSyntax = `["${text}"]`; break;
@@ -2397,15 +2397,15 @@ import * as state from './modules/state.js';
 
             await renderMermaidString(mermaidString);
         }
-
+        
         async function renderMermaidString(mermaidString) {
             document.getElementById('mermaid-code').textContent = mermaidString;
-
+            
             const preview = document.getElementById('mermaid-preview');
             try {
                 // Clear any existing content first
                 preview.innerHTML = '';
-
+                
                 // Generate a unique ID for each render
                 const graphId = 'mermaid-graph-' + Date.now();
                 const { svg } = await mermaid.render(graphId, mermaidString);
@@ -2415,10 +2415,10 @@ import * as state from './modules/state.js';
                 preview.innerHTML = `<div class="text-red-500 p-4 text-sm">Preview Error:<br><pre class="text-xs mt-2 bg-gray-100 p-2 rounded">${e.message}</pre></div>`;
             }
         }
-
+        
         function parseMermaidCode(code) {
             const lines = code.split('\n').map(l => l.trim());
-
+            
             // Detect diagram type
             const firstLine = lines.find(line => line && !line.startsWith('%%'));
             if (firstLine && firstLine.includes('sequenceDiagram')) {
@@ -2441,24 +2441,24 @@ import * as state from './modules/state.js';
                 return parseFlowchart(lines);
             }
         }
-
+        
         function parseSequenceDiagram(lines) {
             const participants = [];
             const messages = [];
             const notes = [];
-
+            
             for (const line of lines) {
                 if (!line || line.startsWith('%%')) continue;
-
+                
                 if (line.includes('sequenceDiagram')) continue;
-
+                
                 // Parse participant
                 const participantMatch = line.match(/^\s*participant\s+([a-zA-Z0-9_]+)/);
                 if (participantMatch) {
                     participants.push({ name: participantMatch[1] });
                     continue;
                 }
-
+                
                 // Parse message
                 const messageMatch = line.match(/^\s*([a-zA-Z0-9_]+)\s*(--?>>?|--?>)\s*([a-zA-Z0-9_]+)\s*:\s*(.*)$/);
                 if (messageMatch) {
@@ -2466,7 +2466,7 @@ import * as state from './modules/state.js';
                     const type = messageMatch[2];
                     const to = messageMatch[3];
                     const text = messageMatch[4];
-
+                    
                     // Ensure participants exist
                     if (!participants.some(p => p.name === from)) {
                         participants.push({ name: from });
@@ -2474,11 +2474,11 @@ import * as state from './modules/state.js';
                     if (!participants.some(p => p.name === to)) {
                         participants.push({ name: to });
                     }
-
+                    
                     messages.push({ from, to, type, text });
                     continue;
                 }
-
+                
                 // Parse note
                 const noteMatch = line.match(/^\s*Note\s+(left|right|over)\s+of\s+([a-zA-Z0-9_]+)\s*:\s*(.*)$/);
                 if (noteMatch) {
@@ -2489,20 +2489,20 @@ import * as state from './modules/state.js';
                     continue;
                 }
             }
-
+            
             return { type: 'sequence', participants, messages, notes };
         }
-
+        
         function parseClassDiagram(lines) {
             const classes = [];
             const relationships = [];
             let currentClass = null;
-
+            
             for (const line of lines) {
                 if (!line || line.startsWith('%%')) continue;
-
+                
                 if (line.includes('classDiagram')) continue;
-
+                
                 // Parse class definition start
                 const classStartMatch = line.match(/^\s*class\s+([a-zA-Z0-9_]+)\s*\{/);
                 if (classStartMatch) {
@@ -2514,7 +2514,7 @@ import * as state from './modules/state.js';
                     };
                     continue;
                 }
-
+                
                 // Parse class end
                 if (line.match(/^\s*\}\s*$/)) {
                     if (currentClass) {
@@ -2523,14 +2523,14 @@ import * as state from './modules/state.js';
                     }
                     continue;
                 }
-
+                
                 // Parse stereotype inside class
                 const stereotypeMatch = line.match(/^\s*<<([^>]+)>>\s*$/);
                 if (stereotypeMatch && currentClass) {
                     currentClass.stereotype = stereotypeMatch[1];
                     continue;
                 }
-
+                
                 // Parse attributes and methods inside class
                 if (currentClass && line.trim()) {
                     const member = line.trim();
@@ -2541,19 +2541,19 @@ import * as state from './modules/state.js';
                     }
                     continue;
                 }
-
+                
                 // Parse standalone class attributes/methods
                 const memberMatch = line.match(/^\s*([a-zA-Z0-9_]+)\s*:\s*(.+)$/);
                 if (memberMatch) {
                     const className = memberMatch[1];
                     const member = memberMatch[2];
-
+                    
                     let classObj = classes.find(c => c.name === className);
                     if (!classObj) {
                         classObj = { name: className, stereotype: '', attributes: [], methods: [] };
                         classes.push(classObj);
                     }
-
+                    
                     if (member.includes('()')) {
                         classObj.methods.push(member);
                     } else {
@@ -2561,7 +2561,7 @@ import * as state from './modules/state.js';
                     }
                     continue;
                 }
-
+                
                 // Parse relationships
                 const relMatch = line.match(/^\s*([a-zA-Z0-9_]+)\s*(<\|--|-->|--\*|--o|--|\.\.>|\.\.\|>)\s*([a-zA-Z0-9_]+)(?:\s*:\s*(.+))?$/);
                 if (relMatch) {
@@ -2569,7 +2569,7 @@ import * as state from './modules/state.js';
                     const type = relMatch[2];
                     const to = relMatch[3];
                     const label = relMatch[4] || '';
-
+                    
                     // Ensure classes exist
                     if (!classes.find(c => c.name === from)) {
                         classes.push({ name: from, stereotype: '', attributes: [], methods: [] });
@@ -2577,11 +2577,11 @@ import * as state from './modules/state.js';
                     if (!classes.find(c => c.name === to)) {
                         classes.push({ name: to, stereotype: '', attributes: [], methods: [] });
                     }
-
+                    
                     relationships.push({ from, to, type, label });
                     continue;
                 }
-
+                
                 // Parse simple class names
                 const simpleClassMatch = line.match(/^\s*([a-zA-Z0-9_]+)\s*$/);
                 if (simpleClassMatch && !classes.find(c => c.name === simpleClassMatch[1])) {
@@ -2594,12 +2594,12 @@ import * as state from './modules/state.js';
                     continue;
                 }
             }
-
+            
             // Add any remaining class being parsed
             if (currentClass) {
                 classes.push(currentClass);
             }
-
+            
             return { type: 'class', classes, relationships };
         }
 
@@ -2716,7 +2716,7 @@ import * as state from './modules/state.js';
             if (currentSection) sections.push(currentSection);
             return { type: 'journey', sections };
         }
-
+        
         function parseFlowchart(lines) {
             const nodes = [];
             const links = [];
@@ -2727,7 +2727,7 @@ import * as state from './modules/state.js';
             // First pass: collect all node definitions
             for (const line of lines) {
                 if (!line || line.startsWith('%%')) continue;
-
+                
                 // Look for node definitions with text
                 const nodeDefMatch = line.match(/([a-zA-Z0-9_]+)\s*(\[[^\]]+\]|\(\(([^\)]+)\)\)|\{[^\}]+\}|\([^\)]+\))/);
                 if (nodeDefMatch) {
@@ -2741,7 +2741,7 @@ import * as state from './modules/state.js';
                 if (!nodes.some(n => n.id === nodeId)) {
                     let text = nodeId; // Default to nodeId if no text found
                     let shape = 'rect';
-
+                    
                     // Check if we have a stored definition for this node
                     const fullDefinition = nodeDefinitions.get(nodeId);
                     if (fullDefinition) {
@@ -2788,7 +2788,7 @@ import * as state from './modules/state.js';
                     nodes.push({ id: currentSubgraphId, text: subgraphStartMatch[2] || 'Subgraph', shape: 'subgraph', isSubgraph: true, subgraphId: null });
                     continue;
                 }
-
+                
                 if (line.match(/^\s*end\s*$/)) {
                     currentSubgraphId = null;
                     continue;
@@ -2807,7 +2807,7 @@ import * as state from './modules/state.js';
                     links.push({ from, to: toId, type, text });
                     continue;
                 }
-
+                
                 // Handle multi-target connections (A --> B & C)
                 const multiLinkMatch = line.match(/^\s*([a-zA-Z0-9_]+)\s*(---|-->|<--|<-->)\s*(?:\|(.*?)\|)?\s*(.+)$/);
                 if (multiLinkMatch) {
@@ -2819,10 +2819,10 @@ import * as state from './modules/state.js';
                     ensureNodeExists(from, currentSubgraphId);
 
                     // Split by & or space-separated targets
-                    const targets = targetsStr.includes('&') ?
-                        targetsStr.split('&').map(s => s.trim()) :
+                    const targets = targetsStr.includes('&') ? 
+                        targetsStr.split('&').map(s => s.trim()) : 
                         targetsStr.split(/\s+/).filter(s => s && /^[a-zA-Z0-9_]+/.test(s));
-
+                    
                     for (const target of targets) {
                         const targetIdMatch = target.match(/^\s*([a-zA-Z0-9_]+)/);
                         if (targetIdMatch) {
@@ -2839,10 +2839,10 @@ import * as state from './modules/state.js';
                 if (nodeDefMatch) {
                     const nodeId = nodeDefMatch[1];
                     if (nodes.some(n => n.id === nodeId)) continue; // Already defined, maybe as part of a link
-
+                    
                     // Get the text content and clean it up
                     let text = nodeDefMatch[2] || nodeDefMatch[3] || nodeDefMatch[4] || nodeDefMatch[5] || nodeId;
-
+                    
                     if (text) {
                         // Remove quotes if present
                         text = text.replace(/^["']|["']$/g, '');
@@ -2852,7 +2852,7 @@ import * as state from './modules/state.js';
                             text = parts.slice(1).join(' ') || text;
                         }
                     }
-
+                    
                     let shape = 'rect';
                     if (nodeDefMatch[0].includes('((')) shape = 'circle';
                     else if (nodeDefMatch[0].includes('{') && !nodeDefMatch[0].includes('{{')) shape = 'diamond';
@@ -2864,7 +2864,7 @@ import * as state from './modules/state.js';
             }
             return { nodes, links, direction };
         }
-
+        
         function loadFromMermaidCode(code) {
             canvas.clear();
             connections = [];
@@ -2878,9 +2878,9 @@ import * as state from './modules/state.js';
             milestones = [];
             journeySteps = [];
             journeySections = [];
-
+        
             const parseResult = parseMermaidCode(code);
-
+            
             // Update diagram type and toolbar based on loaded content
             if (parseResult.type === 'sequence') {
                 loadSequenceDiagram(parseResult);
@@ -2895,15 +2895,15 @@ import * as state from './modules/state.js';
             } else {
                 loadFlowchart(parseResult);
             }
-
+            
             updateToolPalette(diagramType);
         }
-
+        
         function loadSequenceDiagram({ participants, messages, notes }) {
             const createdActors = {};
             const actorSpacing = 200;
             let startX = 150;
-
+            
             // Create actors
             participants.forEach((participant, index) => {
                 const actor = createActor({
@@ -2913,13 +2913,13 @@ import * as state from './modules/state.js';
                 });
                 createdActors[participant.name] = actor;
             });
-
+            
             // Create messages
             let messageY = 200;
             messages.forEach(message => {
                 const fromActor = createdActors[message.from];
                 const toActor = createdActors[message.to];
-
+                
                 if (fromActor && toActor) {
                     createMessage(fromActor, toActor, {
                         text: message.text,
@@ -2929,7 +2929,7 @@ import * as state from './modules/state.js';
                     messageY += 80;
                 }
             });
-
+            
             // Create notes
             notes.forEach(note => {
                 const actor = createdActors[note.actor];
@@ -2943,7 +2943,7 @@ import * as state from './modules/state.js';
                     messageY += 100;
                 }
             });
-
+            
             canvas.renderAll();
             generateAndRenderMermaid();
         }
@@ -3011,19 +3011,19 @@ import * as state from './modules/state.js';
             canvas.renderAll();
             generateAndRenderMermaid();
         }
-
+        
         function loadClassDiagram({ classes, relationships }) {
             const createdClasses = {};
             const classSpacing = 250;
             const classesPerRow = 3;
             let startX = 200;
             let startY = 200;
-
+            
             // Create classes
             classes.forEach((classData, index) => {
                 const row = Math.floor(index / classesPerRow);
                 const col = index % classesPerRow;
-
+                
                 const classObj = createClass({
                     name: classData.name,
                     stereotype: classData.stereotype,
@@ -3032,15 +3032,15 @@ import * as state from './modules/state.js';
                     left: startX + (col * classSpacing),
                     top: startY + (row * 200)
                 });
-
+                
                 createdClasses[classData.name] = classObj;
             });
-
+            
             // Create relationships
             relationships.forEach(relationship => {
                 const fromClass = createdClasses[relationship.from];
                 const toClass = createdClasses[relationship.to];
-
+                
                 if (fromClass && toClass) {
                     createRelationship(fromClass, toClass, {
                         type: relationship.type,
@@ -3048,18 +3048,18 @@ import * as state from './modules/state.js';
                     });
                 }
             });
-
+            
             canvas.renderAll();
             generateAndRenderMermaid();
         }
-
+        
         function loadFlowchart({ nodes, links, direction }) {
             const createdObjects = {};
-
+        
             const g = new dagre.graphlib.Graph({ compound: true });
             g.setGraph({ rankdir: direction, nodesep: 70, ranksep: 70, marginx: 50, marginy: 50 });
             g.setDefaultEdgeLabel(() => ({}));
-
+        
             // Add all nodes and subgraphs to Dagre first
             nodes.forEach(node => {
                 if (node.isSubgraph) {
@@ -3068,34 +3068,34 @@ import * as state from './modules/state.js';
                     g.setNode(node.id, { label: node.text, width: 160, height: 65 });
                 }
             });
-
+            
             // Now, set the parent-child relationships for subgraphs
             nodes.forEach(node => {
                 if (node.subgraphId) {
                     g.setParent(node.id, node.subgraphId);
                 }
             });
-
+        
             // Add edges
             links.forEach(link => g.setEdge(link.from, link.to));
-
+        
             dagre.layout(g);
-
+        
             // Render objects on canvas using Dagre's calculated positions
             g.nodes().forEach(nodeId => {
                 const nodeData = g.node(nodeId);
                 if (!nodeData) return; // Skip if node is somehow invalid
-
+                
                 const originalNode = nodes.find(n => n.id === nodeId);
                 if (!originalNode) return;
-
+        
                 const options = {
                     id: originalNode.id,
                     text: originalNode.text,
                     left: nodeData.x,
                     top: nodeData.y,
                 };
-
+        
                 let fabricObj;
                 if (nodeData.isSubgraph) {
                     options.title = originalNode.text;
@@ -3107,7 +3107,7 @@ import * as state from './modules/state.js';
                 }
                 createdObjects[nodeId] = fabricObj;
             });
-
+        
             // Create all connections
             links.forEach(link => {
                 if (createdObjects[link.from] && createdObjects[link.to]) {
@@ -3116,21 +3116,21 @@ import * as state from './modules/state.js';
                     redrawConnector(newConn);
                 }
             });
-
+            
             const graphWidth = g.graph().width;
             const graphHeight = g.graph().height;
             const canvasWidth = canvas.getWidth();
             const canvasHeight = canvas.getHeight();
-
+            
             canvas.setZoom(1);
             const panX = (canvasWidth - graphWidth) / 2;
             const panY = 50; // Add some top margin
             canvas.viewportTransform = [1, 0, 0, 1, panX, panY];
-
+            
             canvas.renderAll();
             generateAndRenderMermaid();
         }
-
+        
         // --- Draggable Panels ---
         function makeDraggable(elmnt) {
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -3174,7 +3174,7 @@ import * as state from './modules/state.js';
                 document.onmousemove = null;
             }
         }
-
+        
         // --- Save/Load Project Functions ---
         function getProjectData() {
             return {
@@ -3194,21 +3194,21 @@ import * as state from './modules/state.js';
                 relationships: relationships
             };
         }
-
+        
         function saveProjectToStorage(projectName) {
             try {
                 const projectData = getProjectData();
                 const savedProjects = JSON.parse(localStorage.getItem('mermaidEditProjects') || '{}');
-
+                
                 const projectKey = projectName || `Project_${Date.now()}`;
                 savedProjects[projectKey] = {
                     name: projectKey,
                     data: projectData,
                     savedAt: new Date().toISOString()
                 };
-
+                
                 localStorage.setItem('mermaidEditProjects', JSON.stringify(savedProjects));
-
+                
                 // Show success message
                 showNotification(`Project "${projectKey}" saved successfully!`, 'success');
                 return true;
@@ -3218,22 +3218,22 @@ import * as state from './modules/state.js';
                 return false;
             }
         }
-
+        
         function saveProjectToFile(projectName) {
             try {
                 const projectData = getProjectData();
                 const filename = (projectName || 'mermaid-project') + '.json';
-
+                
                 const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
-
+                
                 const link = document.createElement('a');
                 link.download = filename;
                 link.href = url;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-
+                
                 URL.revokeObjectURL(url);
                 showNotification(`Project exported as "${filename}"`, 'success');
                 return true;
@@ -3243,7 +3243,7 @@ import * as state from './modules/state.js';
                 return false;
             }
         }
-
+        
         function loadProjectData(projectData) {
             try {
                 // Clear current canvas
@@ -3263,10 +3263,10 @@ import * as state from './modules/state.js';
                 // Restore global state
                 diagramType = projectData.diagramType || 'flowchart';
                 flowchartDirection = projectData.flowchartDirection || 'TD';
-
+                
                 // Update tool palette
                 updateToolPalette(diagramType);
-
+                
                 // Restore canvas objects
                 canvas.loadFromJSON(projectData.canvas.objects, () => {
                     // Restore canvas view
@@ -3277,7 +3277,7 @@ import * as state from './modules/state.js';
                     if (projectData.canvas.viewportTransform) {
                         canvas.viewportTransform = projectData.canvas.viewportTransform;
                     }
-
+                    
                     // Restore connections
                     if (projectData.connections) {
                         connections = projectData.connections;
@@ -3286,7 +3286,7 @@ import * as state from './modules/state.js';
                             redrawConnector(conn);
                         });
                     }
-
+                    
                     // Restore other data
                     if (projectData.actors) {
                         actors = projectData.actors.map(a => ({
@@ -3294,18 +3294,18 @@ import * as state from './modules/state.js';
                             object: canvas.getObjects().find(o => o.id === a.id)
                         })).filter(a => a.object);
                     }
-
+                    
                     if (projectData.messages) {
                         messages = projectData.messages;
                     }
-
+                    
                     if (projectData.classes) {
                         classes = projectData.classes.map(c => ({
                             ...c,
                             object: canvas.getObjects().find(o => o.id === c.id)
                         })).filter(c => c.object);
                     }
-
+                    
                     if (projectData.relationships) {
                         relationships = projectData.relationships;
                     }
@@ -3313,12 +3313,12 @@ import * as state from './modules/state.js';
                     if (projectData.layersData) {
                         loadLayersData(projectData.layersData);
                     }
-
+                    
                     canvas.renderAll();
                     generateAndRenderMermaid();
                     showNotification('Project loaded successfully!', 'success');
                 });
-
+                
                 return true;
             } catch (error) {
                 console.error('Failed to load project:', error);
@@ -3326,17 +3326,17 @@ import * as state from './modules/state.js';
                 return false;
             }
         }
-
+        
         function loadProjectFromStorage() {
             try {
                 const savedProjects = JSON.parse(localStorage.getItem('mermaidEditProjects') || '{}');
                 const projectKeys = Object.keys(savedProjects);
-
+                
                 if (projectKeys.length === 0) {
                     showNotification('No saved projects found.', 'info');
                     return;
                 }
-
+                
                 // Show saved projects modal
                 showSavedProjectsModal(savedProjects);
             } catch (error) {
@@ -3344,13 +3344,13 @@ import * as state from './modules/state.js';
                 showNotification('Failed to load saved projects: ' + error.message, 'error');
             }
         }
-
+        
         function loadProjectFromFile() {
             const fileInput = document.getElementById('file-input');
             fileInput.onchange = (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
-
+                
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
@@ -3371,18 +3371,18 @@ import * as state from './modules/state.js';
             };
             fileInput.click();
         }
-
+        
         function showSavedProjectsModal(savedProjects) {
             const modal = document.getElementById('saved-projects-modal');
             const listContainer = document.getElementById('saved-projects-list');
-
+            
             // Clear existing content
             listContainer.innerHTML = '';
-
+            
             Object.keys(savedProjects).forEach(projectKey => {
                 const project = savedProjects[projectKey];
                 const savedDate = new Date(project.savedAt).toLocaleString();
-
+                
                 const projectItem = document.createElement('div');
                 projectItem.className = 'flex items-center justify-between p-3 border border-gray-200 rounded-md hover:bg-gray-50';
                 projectItem.innerHTML = `
@@ -3400,10 +3400,10 @@ import * as state from './modules/state.js';
                         </button>
                     </div>
                 `;
-
+                
                 listContainer.appendChild(projectItem);
             });
-
+            
             // Add event listeners
             listContainer.querySelectorAll('.load-project-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -3415,7 +3415,7 @@ import * as state from './modules/state.js';
                     }
                 });
             });
-
+            
             listContainer.querySelectorAll('.delete-project-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     if (confirm('Are you sure you want to delete this project?')) {
@@ -3427,20 +3427,20 @@ import * as state from './modules/state.js';
                     }
                 });
             });
-
+            
             modal.classList.remove('hidden');
         }
-
+        
         function showNotification(message, type = 'info') {
             // Create notification element
             const notification = document.createElement('div');
             const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-
+            
             notification.className = `fixed top-4 right-4 ${bgColor} text-white px-4 py-2 rounded-md shadow-lg z-50 transition-opacity duration-300`;
             notification.textContent = message;
-
+            
             document.body.appendChild(notification);
-
+            
             // Auto-remove after 3 seconds
             setTimeout(() => {
                 notification.style.opacity = '0';
@@ -3451,7 +3451,7 @@ import * as state from './modules/state.js';
                 }, 300);
             }, 3000);
         }
-
+        
         // --- Export Functions ---
         function exportToPNG() {
             const dataURL = canvas.toDataURL({
@@ -3459,7 +3459,7 @@ import * as state from './modules/state.js';
                 quality: 1,
                 multiplier: 2 // Higher resolution
             });
-
+            
             const link = document.createElement('a');
             link.download = 'mermaid-chart.png';
             link.href = dataURL;
@@ -3467,7 +3467,7 @@ import * as state from './modules/state.js';
             link.click();
             document.body.removeChild(link);
         }
-
+        
         function exportToSVG() {
             const svgString = canvas.toSVG({
                 suppressPreamble: false,
@@ -3480,71 +3480,71 @@ import * as state from './modules/state.js';
                     height: canvas.getHeight()
                 }
             });
-
+            
             const blob = new Blob([svgString], { type: 'image/svg+xml' });
             const url = URL.createObjectURL(blob);
-
+            
             const link = document.createElement('a');
             link.download = 'mermaid-chart.svg';
             link.href = url;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
+            
             URL.revokeObjectURL(url);
         }
-
+        
         function exportToPDF() {
             const { jsPDF } = window.jspdf;
-
+            
             // Get canvas dimensions
             const canvasWidth = canvas.getWidth();
             const canvasHeight = canvas.getHeight();
-
+            
             // Calculate PDF dimensions (A4 size with margins)
             const pdfWidth = 210; // A4 width in mm
             const pdfHeight = 297; // A4 height in mm
             const margin = 20; // margin in mm
             const maxWidth = pdfWidth - (2 * margin);
             const maxHeight = pdfHeight - (2 * margin);
-
+            
             // Calculate scale to fit canvas in PDF
             const scaleX = maxWidth / (canvasWidth * 0.264583); // Convert pixels to mm
             const scaleY = maxHeight / (canvasHeight * 0.264583);
             const scale = Math.min(scaleX, scaleY, 1); // Don't scale up
-
+            
             const finalWidth = (canvasWidth * 0.264583 * scale);
             const finalHeight = (canvasHeight * 0.264583 * scale);
-
+            
             // Center the image on the page
             const x = (pdfWidth - finalWidth) / 2;
             const y = (pdfHeight - finalHeight) / 2;
-
+            
             // Get canvas as image
             const dataURL = canvas.toDataURL({
                 format: 'png',
                 quality: 1,
                 multiplier: 2
             });
-
+            
             // Create PDF
             const pdf = new jsPDF({
                 orientation: finalWidth > finalHeight ? 'landscape' : 'portrait',
                 unit: 'mm',
                 format: 'a4'
             });
-
+            
             // Add title
             pdf.setFontSize(16);
             pdf.text('Mermaid Chart', margin, margin);
-
+            
             // Add the canvas image
             pdf.addImage(dataURL, 'PNG', x, y + 10, finalWidth, finalHeight);
-
+            
             // Save the PDF
             pdf.save('mermaid-chart.pdf');
         }
-
+        
         // --- Ruler Drawing and Syncing ---
         const rulerHorizontal = document.getElementById('ruler-horizontal');
         const rulerVertical = document.getElementById('ruler-vertical');
@@ -3552,26 +3552,26 @@ import * as state from './modules/state.js';
         function drawRuler(element, length, isHorizontal) {
             // Clear existing ruler marks
             element.innerHTML = '';
-
+            
             const zoom = canvas.getZoom();
             const vpt = canvas.viewportTransform;
             const offset = isHorizontal ? (vpt ? vpt[4] : 0) : (vpt ? vpt[5] : 0);
-
+            
             // Calculate starting position and step
             const start = Math.floor(-offset / zoom / 10) * 10;
             const end = Math.ceil((length - offset) / zoom / 10) * 10;
-
+            
             for (let i = start; i <= end; i += 10) {
                 const pos = (i * zoom) + offset;
                 if (pos < 0 || pos > length) continue;
-
+                
                 const isMajor = i % 50 === 0;
-
+                
                 // Create tick mark
                 const tick = document.createElement('div');
                 tick.style.position = 'absolute';
                 tick.style.backgroundColor = '#666';
-
+                
                 if (isHorizontal) {
                     tick.style.left = pos + 'px';
                     tick.style.top = (isMajor ? '20px' : '25px');
@@ -3583,9 +3583,9 @@ import * as state from './modules/state.js';
                     tick.style.height = '1px';
                     tick.style.width = (isMajor ? '10px' : '5px');
                 }
-
+                
                 element.appendChild(tick);
-
+                
                 // Add label for major ticks
                 if (isMajor && i !== 0) {
                     const label = document.createElement('div');
@@ -3594,7 +3594,7 @@ import * as state from './modules/state.js';
                     label.style.color = '#666';
                     label.style.fontFamily = 'Inter, sans-serif';
                     label.textContent = Math.abs(i).toString();
-
+                    
                     if (isHorizontal) {
                         label.style.left = (pos - 8) + 'px';
                         label.style.top = '5px';
@@ -3607,7 +3607,7 @@ import * as state from './modules/state.js';
                         label.style.transform = 'rotate(-90deg)';
                         label.style.transformOrigin = 'center';
                     }
-
+                    
                     element.appendChild(label);
                 }
             }
@@ -3615,7 +3615,7 @@ import * as state from './modules/state.js';
 
         function updateRulers() {
             if (!rulerHorizontal || !rulerVertical) return;
-
+            
             const canvasRect = canvas.getElement().getBoundingClientRect();
             drawRuler(rulerHorizontal, canvasRect.width, true);
             drawRuler(rulerVertical, canvasRect.height, false);
@@ -3623,15 +3623,15 @@ import * as state from './modules/state.js';
 
         function resizeRulers() {
             if (!rulerHorizontal || !rulerVertical) return;
-
+            
             const canvasRect = canvas.getElement().getBoundingClientRect();
-
+            
             rulerHorizontal.style.width = canvasRect.width + 'px';
             rulerHorizontal.style.height = '30px';
-
+            
             rulerVertical.style.height = canvasRect.height + 'px';
             rulerVertical.style.width = '30px';
-
+            
             updateRulers();
         }
 
@@ -3649,42 +3649,42 @@ import * as state from './modules/state.js';
         function enableSnapToGrid() {
             canvas.on('object:moving', snapToGrid);
         }
-
+        
         function snapToGrid(options) {
             const gridSize = 20;
             const obj = options.target;
-
+            
             // Calculate snapped position
             const snappedLeft = Math.round(obj.left / gridSize) * gridSize;
             const snappedTop = Math.round(obj.top / gridSize) * gridSize;
-
+            
             obj.set({
                 left: snappedLeft,
                 top: snappedTop
             });
         }
-
+        
         function alignSelectedObjects(alignment) {
             const activeSelection = canvas.getActiveObject();
-
+            
             if (!activeSelection) {
                 showNotification('No objects selected for alignment', 'warning');
                 return;
             }
-
+            
             let objects = [];
-
+            
             if (activeSelection.type === 'activeSelection') {
                 objects = activeSelection.getObjects();
             } else {
                 objects = [activeSelection];
             }
-
+            
             if (objects.length < 2 && !['left', 'center', 'right', 'top', 'middle', 'bottom'].includes(alignment)) {
                 showNotification('Select multiple objects for alignment', 'warning');
                 return;
             }
-
+            
             // Get canvas bounds for single object alignment to canvas
             const canvasBounds = {
                 left: 0,
@@ -3694,7 +3694,7 @@ import * as state from './modules/state.js';
                 centerX: canvas.getWidth() / 2,
                 centerY: canvas.getHeight() / 2
             };
-
+            
             switch (alignment) {
                 case 'left':
                     if (objects.length === 1) {
@@ -3706,7 +3706,7 @@ import * as state from './modules/state.js';
                         objects.forEach(obj => obj.set('left', leftmost));
                     }
                     break;
-
+                    
                 case 'center':
                     if (objects.length === 1) {
                         // Center on canvas
@@ -3717,7 +3717,7 @@ import * as state from './modules/state.js';
                         objects.forEach(obj => obj.set('left', centerX));
                     }
                     break;
-
+                    
                 case 'right':
                     if (objects.length === 1) {
                         // Align to canvas right
@@ -3728,7 +3728,7 @@ import * as state from './modules/state.js';
                         objects.forEach(obj => obj.set('left', rightmost));
                     }
                     break;
-
+                    
                 case 'top':
                     if (objects.length === 1) {
                         // Align to canvas top
@@ -3739,7 +3739,7 @@ import * as state from './modules/state.js';
                         objects.forEach(obj => obj.set('top', topmost));
                     }
                     break;
-
+                    
                 case 'middle':
                     if (objects.length === 1) {
                         // Center vertically on canvas
@@ -3750,7 +3750,7 @@ import * as state from './modules/state.js';
                         objects.forEach(obj => obj.set('top', centerY));
                     }
                     break;
-
+                    
                 case 'bottom':
                     if (objects.length === 1) {
                         // Align to canvas bottom
@@ -3761,20 +3761,20 @@ import * as state from './modules/state.js';
                         objects.forEach(obj => obj.set('top', bottommost));
                     }
                     break;
-
+                    
                 case 'distribute':
                     if (objects.length < 3) {
                         showNotification('Need at least 3 objects to distribute', 'warning');
                         return;
                     }
-
+                    
                     // Sort objects by horizontal position
                     const sortedObjects = [...objects].sort((a, b) => a.left - b.left);
                     const leftmostX = sortedObjects[0].left;
                     const rightmostX = sortedObjects[sortedObjects.length - 1].left;
                     const totalWidth = rightmostX - leftmostX;
                     const spacing = totalWidth / (sortedObjects.length - 1);
-
+                    
                     sortedObjects.forEach((obj, index) => {
                         if (index > 0 && index < sortedObjects.length - 1) {
                             obj.set('left', leftmostX + (spacing * index));
@@ -3782,16 +3782,16 @@ import * as state from './modules/state.js';
                     });
                     break;
             }
-
+            
             // Update connections if objects have them
             objects.forEach(obj => {
                 if (obj.isShapeGroup || obj.isSubgraph || obj.isActor || obj.isClass || obj.isEntity || obj.isTask || obj.isMilestone || obj.isJourneyStep) {
                     updateConnectionsFor(obj);
                 }
             });
-
+            
             canvas.renderAll();
-
+            
             // Show alignment toolbar if multiple objects are selected
             const alignmentToolbar = document.getElementById('alignment-toolbar');
             if (objects.length > 1) {
@@ -3799,10 +3799,10 @@ import * as state from './modules/state.js';
             } else {
                 alignmentToolbar.classList.remove('visible');
             }
-
+            
             showNotification(`Objects aligned: ${alignment}`, 'success');
         }
-
+        
         function initializeApp() {
             setupEventListeners();
             setupMobilePanelToggle();
@@ -3810,24 +3810,24 @@ import * as state from './modules/state.js';
             makeDraggable(document.getElementById('tool-palette'));
             makeDraggable(document.getElementById('layers-panel'));
             resizeCanvas();
-
+            
             // Enable grid and snap by default
             document.getElementById('toggle-grid').classList.add('active');
             document.getElementById('toggle-snap').classList.add('active');
             canvasWrapper.classList.add('grid-background');
             enableSnapToGrid();
-
+            
             // Generate initial empty mermaid with a delay to ensure DOM is ready
             setTimeout(() => {
                 generateAndRenderMermaid();
             }, 100);
-
+            
             // Global context menu listeners
             document.addEventListener('contextmenu', (e) => {
                 // Prevent default context menu everywhere
                 e.preventDefault();
             });
-
+            
             // Global click listener to hide context menu
             document.addEventListener('click', (e) => {
                 hideContextMenu();
@@ -3835,7 +3835,7 @@ import * as state from './modules/state.js';
         }
 
         initializeApp();
-
+        
         // --- Layers Panel JavaScript Implementation ---
         const layersPanel = document.getElementById('layers-panel');
         const layersList = document.getElementById('layers-list');
@@ -4149,7 +4149,7 @@ import * as state from './modules/state.js';
             closeLayersBtn.addEventListener('click', () => {
                 layersPanel.classList.remove('visible');
             });
-
+            
             // Add event listener for the main layers button in toolbar
             const layersBtn = document.getElementById('layers-btn');
             if (layersBtn) {
@@ -4184,12 +4184,12 @@ import * as state from './modules/state.js';
 
         function loadLayersData(data) {
             if (!data) return;
-
+            
             layersData = data.layers.map(layer => ({
                 ...layer,
                 objectIds: new Set(layer.objectIds)
             }));
-
+            
             activeLayerId = data.activeLayerId || 'layer-0';
             refreshLayersUI();
             updateCanvasVisibility();
@@ -4215,6 +4215,6 @@ import * as state from './modules/state.js';
 
         // Call initialization after main app init
         initializeLayersPanel();
-
+        
         // Make the layers panel draggable
         makeDraggable(layersPanel);
